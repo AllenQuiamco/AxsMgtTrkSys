@@ -173,11 +173,11 @@ public class ReceivingTabComposite extends Composite
 		{
 			item = new TableItem(table, SWT.NONE);
 			item.setText(Utilities.toArray(
-					String.format("%d",row.ID),
-					row.Folder,
-					row.RequestType,
-					row.RequestedBy,
-					(row.ReceivedOn == null) ? "" : formatter.format(row.ReceivedOn)
+					String.format("%d",row.getID()),
+					row.getFolder(),
+					row.getRequestType(),
+					row.getRequestedBy(),
+					(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn())
 					));
 		}
 	}

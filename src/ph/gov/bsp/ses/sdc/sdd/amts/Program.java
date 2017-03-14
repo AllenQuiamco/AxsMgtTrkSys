@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.core.databinding.observable.Realm;
+import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionEvent;
@@ -16,6 +18,7 @@ import org.eclipse.swt.widgets.*;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Version;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingTabComposite;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
@@ -24,8 +27,9 @@ import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
 
 public class Program
 {
-	static String USER_DOMAIN;
-	static String USER_NAME;
+//	static String USER_DOMAIN;
+//	static String USER_NAME;
+	private static String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
 	
 	static Configuration configuration = null;
 	private static boolean receivingInitialized;
@@ -83,12 +87,23 @@ public class Program
 		}
 	}
 	
+	public static String getUser()
+	{
+		return USER;
+	}
+
+//	public static void setUser(String user)
+//	{
+//		USER = user;
+//	}
+	
 	public static void main(String[] args)
 	{
 		try
-		{
-			Program.USER_DOMAIN = System.getenv("USERDOMAIN");
-			Program.USER_NAME = System.getenv("USERNAME");
+		{			
+//			Program.USER_DOMAIN = System.getenv("USERDOMAIN");
+//			Program.USER_NAME = System.getenv("USERNAME");
+//			Program.setUser(String.format("%s\\%s", Program.USER_DOMAIN, Program.USER_NAME));
 			
 			// #region Read configuration file
 			
@@ -149,7 +164,7 @@ public class Program
 			
 			// #endregion
 			
-			MainWindow mw = new MainWindow();
+			final MainWindow mw = new MainWindow();
 			
 			// load settings
 			mw.getTextSqliteDb().setText(configuration.SqliteDbFilePath);
@@ -159,7 +174,15 @@ public class Program
 			// load about page
 			mw.setInfoUrl(Utilities.getAbsolutePath("ABOUT.html"));
 			
-			mw.open();
+			mw.getDisplay();
+			Realm.runWithDefault(SWTObservables.getRealm(mw.getDisplay()), new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					mw.open();
+				}
+			});
 			
 		}
 		catch (UserAbortException uae)
@@ -442,7 +465,7 @@ public class Program
 			{
 				try
 				{
-					String connString = configuration.getSqliteConnectionString();
+					String connString = Configuration.getSqliteConnectionString(setting);
 					conn = DriverManager.getConnection(connString);
 					
 					// validateConnection() must catch its exceptions, but print
@@ -648,6 +671,9 @@ public class Program
 
 	// #endregion
 	
+	/**
+	 * <p>WARNING: This method spawns a UI element.</p>
+	 */
 	public static void receive(Shell mainShell, SelectionEvent buttonSelectedEvent)
 	{
 		FileDialog fd = new FileDialog(mainShell, SWT.OPEN | SWT.MULTI);
@@ -700,9 +726,56 @@ public class Program
 		// reaching here means the copy is successful
 		
 		Monitoring item = new Monitoring();
-		item.Folder = folder;
-		item.ReceivedOn = new Date(receivedOn);
-		item.ReceivedBy = String.format("%s\\%s", Program.USER_DOMAIN, Program.USER_NAME);
-		item.ApprovalStatus = "UNAPPROVED";
+		item.setFolder(folder);
+		item.setReceivedOn(new Date(receivedOn));
+		item.setReceivedBy(Program.USER);
+		item.setApprovalStatus("UNAPPROVED");
+		
+		ReceivingDialog edit = new ReceivingDialog(mainShell, SWT.NONE);
+		edit.setItem(item);
+		if (edit.open())
+		{
+			Utilities.dump(item, System.out);
+		}
+		else
+		{
+			System.out.println("CANCELLED");
+		}
+	}
+
+	/**
+	 * <p>WARNING: This method spawns a UI element.</p> 
+	 */
+	public static boolean newEntry(Shell shell, Monitoring item)
+	{
+		boolean success = false;
+		Connection conn = null;
+		
+		try
+		{
+			try
+			{
+				String connString = configuration.getSqliteConnectionString();
+				conn = DriverManager.getConnection(connString);
+				
+				Monitoring.newEntry(conn, item);
+				
+				success = true;
+			}
+			finally
+			{
+				if (conn != null)
+				{
+					conn.close();
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to create new entry.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		
+		return success;
 	}
 }

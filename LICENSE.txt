@@ -62,6 +62,25 @@ This source code is compiled with this software.
 
 ===============================================================================
 
+Eclipse Data Binding
+© 2006-2013 Eclipse Foundation
+
+This software uses the following Eclipse plugins under the under the Eclipse 
+Public License v1.0:
+
+org.eclipse.core.databinding_1.4.1.v20130515-1857.jar
+org.eclipse.core.databinding.beans_1.2.200.v20130515-1857.jar
+org.eclipse.core.databinding.observable_1.4.1.v20130515-1857.jar
+org.eclipse.core.databinding.property_1.4.200.v20130515-1857.jar
+org.eclipse.jface.databinding_1.6.200.v20130515-1857.jar
+org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
+com.ibm.icu_50.1.1.v201304230130.jar
+
+A copy of the binaries within these files are packaged within the 
+software.
+
+===============================================================================
+
 Apache Commons IO 2.5
 © 2016 The Apache Software Foundation
 

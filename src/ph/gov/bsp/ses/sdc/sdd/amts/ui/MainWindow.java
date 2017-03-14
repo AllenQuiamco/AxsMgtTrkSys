@@ -151,7 +151,7 @@ public class MainWindow
 		lblLoggedOnAs.setText("Logged on as:");
 		
 		txtLoggedOnAs = new Text(cmpInfoUser, SWT.BORDER);
-		txtLoggedOnAs.setText("{LoggedOnAs}");
+		txtLoggedOnAs.setText(Program.getUser());
 		txtLoggedOnAs.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		final Button btnInfoBrowserBack = new Button(cmpInfo, SWT.FLAT);

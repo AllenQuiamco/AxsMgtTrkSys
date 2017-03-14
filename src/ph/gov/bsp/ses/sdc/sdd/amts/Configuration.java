@@ -140,6 +140,11 @@ public class Configuration implements Serializable, Cloneable
 	
 	public String getSqliteConnectionString()
 	{
-		return String.format("jdbc:sqlite:%s", this.SqliteDbFilePath.replace("\\", "/"));
+		return getSqliteConnectionString(this.SqliteDbFilePath);
+	}
+	
+	public static String getSqliteConnectionString(String filepath)
+	{
+		return String.format("jdbc:sqlite:%s", filepath.replace("\\", "/"));
 	}
 }
