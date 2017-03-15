@@ -7,30 +7,30 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
+import java.sql.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 public class Monitoring implements Cloneable
 {
-	private static final String TABLE_NAME = "Monitoring";
+	private static final String TABLE_NAME = "MONITORING";
 	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
 	
-	private int id;
+	private int id = -1; // 0 is test, any positive is actual data
 	private String folder;
 	private String requestType;
 	private String requestedBy;
-	private Date receivedOn = new Date(System.currentTimeMillis());
+	private long receivedOn; // TODO catch NULL from database
 	private String receivedBy;
 	private String approvalStatus;
 	private String assignedBy;
 	private String assignedTo;
-	private Date assignedOn;
+	private long assignedOn = -1;
 	private String processDetails;
 	private String processedBy;
-	private Date processedOn;
-	private Date resolvedOn;
+	private long processedOn = -1;
+	private long resolvedOn = -1;
 	private String remarks;
 	
 	@Override
@@ -99,12 +99,12 @@ public class Monitoring implements Cloneable
 
 	public Date getReceivedOn()
 	{
-		return receivedOn;
+		return new Date(receivedOn);
 	}
 	
 	public void setReceivedOn(Date receivedOn)
 	{
-		this.receivedOn = receivedOn;
+		this.receivedOn = receivedOn.getTime();
 	}
 
 	public String getReceivedBy()
@@ -149,12 +149,12 @@ public class Monitoring implements Cloneable
 
 	public Date getAssignedOn()
 	{
-		return assignedOn;
+		return new Date(assignedOn);
 	}
 
 	public void setAssignedOn(Date assignedOn)
 	{
-		this.assignedOn = assignedOn;
+		this.assignedOn = assignedOn.getTime();
 	}
 
 	public String getProcessDetails()
@@ -179,22 +179,22 @@ public class Monitoring implements Cloneable
 
 	public Date getProcessedOn()
 	{
-		return processedOn;
+		return new Date(processedOn);
 	}
 
 	public void setProcessedOn(Date processedOn)
 	{
-		this.processedOn = processedOn;
+		this.processedOn = processedOn.getTime();
 	}
 
 	public Date getResolvedOn()
 	{
-		return resolvedOn;
+		return new Date(resolvedOn);
 	}
 
 	public void setResolvedOn(Date resolvedOn)
 	{
-		this.resolvedOn = resolvedOn;
+		this.resolvedOn = resolvedOn.getTime();
 	}
 
 	public String getRemarks()
@@ -223,16 +223,16 @@ public class Monitoring implements Cloneable
 			item.folder = String.format("folder%08x", random.nextInt());
 			item.requestType = String.format("requestType%08x", random.nextInt());
 			item.requestedBy = String.format("requestedBy%08x", random.nextInt());
-			item.receivedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1);
+			item.receivedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
 			item.receivedBy = String.format("receivedBy%08x", random.nextInt());
 			item.approvalStatus = String.format("approvalStatus%08x", random.nextInt());
 			item.assignedBy = String.format("assignedBy%08x", random.nextInt());
 			item.assignedTo = String.format("assignedTo%08x", random.nextInt());
-			item.assignedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1);
+			item.assignedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
 			item.processDetails = String.format("processDetails%08x", random.nextInt());
 			item.processedBy = String.format("processedBy%08x", random.nextInt());
-			item.processedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1);
-			item.resolvedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1);
+			item.processedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
+			item.resolvedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
 			item.remarks = String.format("remarks%08x", random.nextInt());
 			retobj.add(item);
 		}
@@ -300,7 +300,9 @@ public class Monitoring implements Cloneable
 				}
 				catch (IllegalArgumentException e)
 				{
-					e.printStackTrace();
+					String check = "Can not set field to null value";
+					check = check.trim().toUpperCase().replaceAll("", ".*");
+					if (!e.getMessage().toUpperCase().matches(check)) e.printStackTrace();
 				}
 				catch (IllegalAccessException e)
 				{
@@ -315,27 +317,52 @@ public class Monitoring implements Cloneable
 	}
 
 	/**
-	 * WARNING: This method disables auto-commit of the argument {@link Connection}.
+	 * <p>WARNING: This method calls {@link PreparedStatement#executeUpdate()}. 
+	 * Database commit or rollback operations must be done outside of this 
+	 * method.</p>
 	 */
-	public static void newEntry(Connection conn, Monitoring item) throws Exception
+	public static void addNew(Connection conn, Monitoring item) throws SQLException
 	{
-		conn.setAutoCommit(false);
+		PreparedStatement insert = null;
 		
 		try
 		{
-			String insertNew = String.format("INSERT INTO %s (`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`Remarks`) VALUES (?,?,?,?,?,?,?)", 
-					TABLE_NAME);
-			PreparedStatement insert = conn.prepareStatement(insertNew);
+			String insertNew = String.format("INSERT INTO %s ", TABLE_NAME);
+			insertNew += "(`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`Remarks`) ";
+			insertNew += "VALUES (?,?,?,?,?,?,?)";
+			insert = conn.prepareStatement(insertNew);
+			insert.setString(1, item.folder);
+			insert.setString(2, item.requestType);
+			insert.setString(3, item.requestedBy);
+			insert.setLong(4, item.receivedOn);
+			insert.setString(5,  item.receivedBy);
+			insert.setString(6, item.approvalStatus);
+			insert.setString(7, item.remarks);
 			
-			// TODO insert new item
-			
-			conn.commit();
+			int result = insert.executeUpdate();
+			if (result < 1) throw new SQLException("No rows were inserted.");
+			else if (result > 1) throw new SQLException("More than one row was inserted.");
 		}
-		catch (Exception e)
+		finally
 		{
-			conn.rollback();
-			throw e;
+			if (insert != null) insert.close(); 
 		}
+	}
+
+	public static int getIdFromFolder(Connection conn, String folder) throws SQLException
+	{
+		int retval = 0;
+		
+		String selectString = String.format("SELECT `ID` FROM %s WHERE `FOLDER`=?", TABLE_NAME);
+		PreparedStatement select = conn.prepareStatement(selectString);
+		select.setString(1, folder);
+		ResultSet result = select.executeQuery();
+		if (result.next())
+		{
+			retval = result.getInt(1);
+		}
+		
+		return retval;
 	}
 	
 }

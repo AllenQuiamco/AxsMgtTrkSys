@@ -33,6 +33,7 @@ public class ReceivingTabComposite extends Composite
 	private PaginationComposite xcmpPagination;
 	private Text txtType;
 	private Text txtFrom;
+	protected ReceivingTabComposite self;
 	
 	/**
 	 * Create the composite.
@@ -45,12 +46,14 @@ public class ReceivingTabComposite extends Composite
 		setLayout(new FormLayout());
 		
 		setParentShell(parent);
+		self = this;
 		
 		Button btnNewEntry = new Button(this, SWT.NONE);
 		btnNewEntry.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Program.receive(parentShell, e);
+				Program.refreshReceivingTab(self, true);
 			}
 		});
 		FormData fd_btnNewEntry = new FormData();
@@ -59,6 +62,12 @@ public class ReceivingTabComposite extends Composite
 		btnNewEntry.setText("New Entry");
 		
 		Button btnRefresh = new Button(this, SWT.NONE);
+		btnRefresh.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.refreshReceivingTab(self, true);
+			}
+		});
 		FormData fd_btnRefresh = new FormData();
 		fd_btnRefresh.top = new FormAttachment(btnNewEntry, 1);
 		fd_btnRefresh.right = new FormAttachment(btnNewEntry, 0, SWT.RIGHT);
@@ -103,6 +112,10 @@ public class ReceivingTabComposite extends Composite
 		
 		Group grpFilter = new Group(this, SWT.NONE);
 		fd_table.top = new FormAttachment(grpFilter, 6);
+		
+		TableColumn tblclmnReceivedby = new TableColumn(table, SWT.NONE);
+		tblclmnReceivedby.setWidth(100);
+		tblclmnReceivedby.setText("ReceivedBy");
 		grpFilter.setText("Filter");
 		grpFilter.setLayout(new GridLayout(2, false));
 		FormData fd_grpFilter = new FormData();
@@ -167,18 +180,18 @@ public class ReceivingTabComposite extends Composite
 		this.table.removeAll();
 		
 		TableItem item;
-		SimpleDateFormat formatter = new SimpleDateFormat("dd-mmm-yyyy hh:mm a");
+		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
 		for (Monitoring row : rows)
 		{
 			item = new TableItem(table, SWT.NONE);
 			item.setText(Utilities.toArray(
-					String.format("%d",row.getID()),
-					row.getFolder(),
-					row.getRequestType(),
-					row.getRequestedBy(),
-					(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn())
-					));
+					String.format("%d", row.getID()), 
+					row.getFolder(), 
+					row.getRequestType(), 
+					row.getRequestedBy(), 
+					(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+					row.getRequestedBy()));
 		}
 	}
 

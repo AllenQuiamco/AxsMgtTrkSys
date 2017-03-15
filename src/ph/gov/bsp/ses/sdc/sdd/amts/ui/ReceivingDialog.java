@@ -36,7 +36,8 @@ public class ReceivingDialog extends Dialog
 	private Text txtId;
 	private Text txtFolder;
 	private Text txtReceivedBy;
-	private DateTime dtwReceivedOn;
+	private DateTime dtwReceivedOnDate;
+	private DateTime dtwReceivedOnTime;
 	private Text txtRequestType;
 	private Text txtRequestedBy;
 	private Button btnSave;
@@ -115,7 +116,10 @@ public class ReceivingDialog extends Dialog
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Program.newEntry(shell, itemEditable);
+				if (Program.newEntry(shell, itemEditable))
+				{
+					shell.close();
+				}
 			}
 		});
 		btnSave.setText("Save");
@@ -174,15 +178,21 @@ public class ReceivingDialog extends Dialog
 		lblReceivedOnSub.setLayoutData(fd_lblReceivedOnSub);
 		lblReceivedOnSub.setText("( m / d / yyyy )");
 		
-		dtwReceivedOn = new DateTime(cmpDetails, SWT.BORDER | SWT.DROP_DOWN);
-		dtwReceivedOn.setEnabled(false);
-		dtwReceivedOn.setToolTipText("M / D / YYYY");
-		dtwReceivedOn.setDate(1990, 1, 1);
-		FormData fd_dtwReceivedOn = new FormData();
-		fd_dtwReceivedOn.right = new FormAttachment(100);
-		fd_dtwReceivedOn.top = new FormAttachment(0, 56);
-		fd_dtwReceivedOn.left = new FormAttachment(0, 74);
-		dtwReceivedOn.setLayoutData(fd_dtwReceivedOn);		
+		dtwReceivedOnDate = new DateTime(cmpDetails, SWT.BORDER);
+		dtwReceivedOnDate.setEnabled(false);
+		FormData fd_dtwReceivedOnDate = new FormData();
+		fd_dtwReceivedOnDate.right = new FormAttachment(0, 174);
+		fd_dtwReceivedOnDate.top = new FormAttachment(0, 56);
+		fd_dtwReceivedOnDate.left = new FormAttachment(0, 74);
+		dtwReceivedOnDate.setLayoutData(fd_dtwReceivedOnDate);
+		
+		dtwReceivedOnTime = new DateTime(cmpDetails, SWT.BORDER | SWT.TIME);
+		dtwReceivedOnTime.setEnabled(false);
+		FormData fd_dtwReceivedOnTime = new FormData();
+		fd_dtwReceivedOnTime.left = new FormAttachment(0, 177);
+		fd_dtwReceivedOnTime.right = new FormAttachment(0, 277);
+		fd_dtwReceivedOnTime.top = new FormAttachment(0, 56);
+		dtwReceivedOnTime.setLayoutData(fd_dtwReceivedOnTime);
 		
 		Label lblReceivedBy = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblReceivedBy = new FormData();
@@ -257,6 +267,7 @@ public class ReceivingDialog extends Dialog
 		this.item = item;
 		this.itemEditable = item.clone();
 	}
+	
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
@@ -268,9 +279,12 @@ public class ReceivingDialog extends Dialog
 		IObservableValue folderItemObserveValue = PojoProperties.value("folder").observe(itemEditable);
 		bindingContext.bindValue(observeTextTxtFolderObserveWidget, folderItemObserveValue, null, null);
 		//
-		IObservableValue observeSelectionDtwReceivedOnObserveWidget = WidgetProperties.selection().observe(dtwReceivedOn);
+		IObservableValue observeSelectionDtwReceivedOnObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnDate);
 		IObservableValue receivedOnItemEditableObserveValue = PojoProperties.value("receivedOn").observe(itemEditable);
 		bindingContext.bindValue(observeSelectionDtwReceivedOnObserveWidget, receivedOnItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeSelectionDtwReceivedOnTimeObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnTime);
+		bindingContext.bindValue(observeSelectionDtwReceivedOnTimeObserveWidget, receivedOnItemEditableObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtReceivedByObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtReceivedBy);
 		IObservableValue receivedByItemEditableObserveValue = PojoProperties.value("receivedBy").observe(itemEditable);
@@ -281,7 +295,8 @@ public class ReceivingDialog extends Dialog
 		bindingContext.bindValue(observeTextTxtRequestTypeObserveWidget, requestTypeItemEditableObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtRequestedByObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtRequestedBy);
-		bindingContext.bindValue(observeTextTxtRequestedByObserveWidget, requestTypeItemEditableObserveValue, null, null);
+		IObservableValue requestedByItemEditableObserveValue = PojoProperties.value("requestedBy").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtRequestedByObserveWidget, requestedByItemEditableObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtRemarksObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtRemarks);
 		IObservableValue remarksItemEditableObserveValue = PojoProperties.value("remarks").observe(itemEditable);

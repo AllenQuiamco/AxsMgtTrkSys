@@ -2,8 +2,8 @@ package ph.gov.bsp.ses.sdc.sdd.amts;
 
 import java.io.*;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -12,9 +12,9 @@ import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Version;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
@@ -733,14 +733,7 @@ public class Program
 		
 		ReceivingDialog edit = new ReceivingDialog(mainShell, SWT.NONE);
 		edit.setItem(item);
-		if (edit.open())
-		{
-			Utilities.dump(item, System.out);
-		}
-		else
-		{
-			System.out.println("CANCELLED");
-		}
+		edit.open();
 	}
 
 	/**
@@ -757,10 +750,31 @@ public class Program
 			{
 				String connString = configuration.getSqliteConnectionString();
 				conn = DriverManager.getConnection(connString);
+				conn.setAutoCommit(false);
 				
-				Monitoring.newEntry(conn, item);
+				Monitoring.addNew(conn, item);
+				
+				int rowId = Monitoring.getIdFromFolder(conn, item.getFolder());
+				
+				Log logItem = new Log();
+				logItem.setUserId(Program.USER);
+				logItem.setAction("new entry");
+				logItem.setEffectedOn(new Date(System.currentTimeMillis())); // should be at most a few seconds from here ...
+				logItem.setTableName("MONITORING");
+				logItem.setRowId(rowId);
+				
+				Log.append(conn, logItem);
+				
+				conn.commit(); // ... to here
 				
 				success = true;
+			}
+			catch (Exception e)
+			{
+				success = false;
+				
+				conn.rollback();
+				throw e; // rethrow
 			}
 			finally
 			{
