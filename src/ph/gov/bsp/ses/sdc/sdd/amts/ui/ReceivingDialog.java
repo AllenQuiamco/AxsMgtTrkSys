@@ -1,12 +1,17 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.util.Hashtable;
+import java.util.List;
+
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
+import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;
@@ -26,11 +31,17 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.graphics.Color;
 
 public class ReceivingDialog extends Dialog
 {
 	private Monitoring item;
 	private Monitoring itemEditable;
+	private boolean editedRequestType = false;
+	private boolean editedRequestedBy = false;
+	private boolean editedRemarks = false;
 	protected boolean result;
 	protected Shell shell;
 	private Text txtId;
@@ -44,6 +55,7 @@ public class ReceivingDialog extends Dialog
 	private Text txtRemarks;
 	private Composite cmpSave;
 	private Composite cmpDetails;
+	private Hashtable<String, Color> defaultColors = new Hashtable<String, Color>();
 	
 	public static void main(String[] args)
 	{
@@ -51,7 +63,7 @@ public class ReceivingDialog extends Dialog
 		Shell shell = new Shell(display);
 		final ReceivingDialog dialog = new ReceivingDialog(shell, SWT.NONE);
 		
-		Monitoring item = Monitoring.getSamples().getFirst();
+		Monitoring item = Monitoring.getSamples(1).getFirst();
 		dialog.setItem(item);
 		
 		Realm.runWithDefault(SWTObservables.getRealm(display), new Runnable()
@@ -216,6 +228,30 @@ public class ReceivingDialog extends Dialog
 		fd_txtRequestType.left = new FormAttachment(0, 74);
 		txtRequestType.setLayoutData(fd_txtRequestType);
 		txtRequestType.setText("Request Type");
+		this.defaultColors.put("txtRequestType.background", txtRequestType.getBackground());
+		txtRequestType.addModifyListener(new ModifyListener()
+		{
+			public void modifyText(ModifyEvent e)
+			{
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getRequestType(), itemEditable.getRequestType()))
+						{
+							txtRequestType.setBackground(getDefaultColor("txtRequestType.background"));
+							editedRequestType = false;
+						}
+						else 
+						{
+							txtRequestType.setBackground(getColor_BG_CHANGED_SETTING());
+							editedRequestType = true;
+						}
+					}
+				});
+			}
+		});
 		
 		Label lblType = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblType = new FormData();
@@ -238,6 +274,30 @@ public class ReceivingDialog extends Dialog
 		fd_txtRequestedBy.left = new FormAttachment(0, 74);
 		txtRequestedBy.setLayoutData(fd_txtRequestedBy);
 		txtRequestedBy.setText("Requested by");
+		this.defaultColors.put("txtRequestedBy.background", txtRequestType.getBackground());
+		txtRequestedBy.addModifyListener(new ModifyListener()
+		{
+			public void modifyText(ModifyEvent e)
+			{
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getRequestedBy(), itemEditable.getRequestedBy()))
+						{
+							txtRequestedBy.setBackground(getDefaultColor("txtRequestedBy.background"));
+							editedRequestedBy = false;
+						}
+						else 
+						{
+							txtRequestedBy.setBackground(getColor_BG_CHANGED_SETTING());
+							editedRequestedBy = true;
+						}
+					}
+				});
+			}
+		});
 		
 		Label lblRemarks = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblRemarks = new FormData();
@@ -266,6 +326,11 @@ public class ReceivingDialog extends Dialog
 	{
 		this.item = item;
 		this.itemEditable = item.clone();
+	}
+
+	public Monitoring getEditedItem()
+	{
+		return this.itemEditable;
 	}
 	
 	protected DataBindingContext initDataBindings() {
@@ -303,5 +368,21 @@ public class ReceivingDialog extends Dialog
 		bindingContext.bindValue(observeTextTxtRemarksObserveWidget, remarksItemEditableObserveValue, null, null);
 		//
 		return bindingContext;
+	}
+
+	public List<Log> getChangeLog()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private Color getColor_BG_CHANGED_SETTING()
+	{
+		return new Color(this.getParent().getDisplay(), 255, 255, 225);
+	}
+	
+	private Color getDefaultColor(String element)
+	{
+		return this.defaultColors.get(element);
 	}
 }

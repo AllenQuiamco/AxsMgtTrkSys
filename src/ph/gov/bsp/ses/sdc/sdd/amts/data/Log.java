@@ -4,16 +4,22 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Log
 {
 	private static final String TABLE_NAME = "LOG";
 	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`,";
+	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 	
 	private int id = -1;
 	private String userId;
 	private String action;
-	private long effectedOn = -1;
+	private String effectedOn;
 	private String tableName;
 	private String fieldName;
 	private int rowId = -1;
@@ -52,12 +58,12 @@ public class Log
 	
 	public Date getEffectedOn()
 	{
-		return new Date(effectedOn);
+		return getDate(effectedOn);
 	}
 	
 	public void setEffectedOn(Date effectedOn)
 	{
-		this.effectedOn = effectedOn.getTime();
+		this.effectedOn = formatDate(effectedOn);
 	}
 	
 	public String getTableName()
@@ -109,7 +115,29 @@ public class Log
 	{
 		this.newValue = newValue;
 	}
-
+	
+	public static Date getDate(String value)
+	{
+		Date retobj = null;
+		if (value == null) return retobj;
+		try
+		{
+			java.util.Date date = DATE_FORMATTER.parse(value);
+			retobj = new Date(date.getTime());
+		}
+		catch (ParseException pe)
+		{
+			pe.printStackTrace();
+		}
+		return retobj;
+	}
+	
+	public static String formatDate(Date value)
+	{
+		if (value == null) return null;
+		return DATE_FORMATTER.format(value);
+	}
+	
 	public static void append(Connection conn, Log item) throws SQLException
 	{
 		PreparedStatement insert = null;
@@ -122,9 +150,9 @@ public class Log
 			insert = conn.prepareStatement(insertNew);
 			insert.setString(1, item.userId);
 			insert.setString(2, item.action);
-			insert.setLong(3, item.effectedOn);
+			insert.setString(3, item.effectedOn);
 			insert.setString(4, item.tableName);
-			insert.setString(5,  item.fieldName);
+			insert.setString(5, item.fieldName);
 			insert.setInt(6, item.rowId);
 			insert.setString(7, item.oldValue);
 			insert.setString(8, item.newValue);
@@ -135,8 +163,7 @@ public class Log
 		}
 		finally
 		{
-			if (insert != null) insert.close(); 
+			if (insert != null) insert.close();
 		}
 	}
-	
 }

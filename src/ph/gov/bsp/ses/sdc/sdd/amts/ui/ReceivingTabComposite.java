@@ -1,5 +1,6 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -9,6 +10,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -83,6 +86,36 @@ public class ReceivingTabComposite extends Composite
 		table.setLayoutData(fd_table);
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
+		table.addListener(SWT.Selection, new Listener()
+		{
+			public void handleEvent(Event event)
+			{
+				//String string = event.detail == SWT.CHECK ? "Checked" : "Selected";
+				if (TableItem.class.isInstance(event.item))
+				{
+					final TableItem item = (TableItem)event.item;
+					getDisplay().asyncExec(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							item.setChecked(false);
+						}
+					});
+					String textId = item.getText();
+					int id = Integer.parseInt(textId);
+					
+					try
+					{
+						Program.updateReceiving(parentShell, item, id);
+					}
+					catch (SQLException e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 		
 		TableColumn tblclmnId = new TableColumn(table, SWT.NONE);
 		tblclmnId.setWidth(100);
@@ -109,6 +142,14 @@ public class ReceivingTabComposite extends Composite
 		fd_paginationComposite.left = new FormAttachment(50, -165);
 		fd_paginationComposite.bottom = new FormAttachment(100);
 		xcmpPagination.setLayoutData(fd_paginationComposite);
+		xcmpPagination.setPageChangeAction(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Program.refreshReceivingTab(self, true);
+			}
+		});
 		
 		Group grpFilter = new Group(this, SWT.NONE);
 		fd_table.top = new FormAttachment(grpFilter, 6);
@@ -116,6 +157,10 @@ public class ReceivingTabComposite extends Composite
 		TableColumn tblclmnReceivedby = new TableColumn(table, SWT.NONE);
 		tblclmnReceivedby.setWidth(100);
 		tblclmnReceivedby.setText("ReceivedBy");
+		
+		TableColumn tblclmnRemarks = new TableColumn(table, SWT.NONE);
+		tblclmnRemarks.setWidth(100);
+		tblclmnRemarks.setText("Remarks");
 		grpFilter.setText("Filter");
 		grpFilter.setLayout(new GridLayout(2, false));
 		FormData fd_grpFilter = new FormData();
@@ -188,10 +233,11 @@ public class ReceivingTabComposite extends Composite
 			item.setText(Utilities.toArray(
 					String.format("%d", row.getID()), 
 					row.getFolder(), 
-					row.getRequestType(), 
+					row.getRequestType(),
 					row.getRequestedBy(), 
 					(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
-					row.getRequestedBy()));
+					row.getReceivedBy(),
+					row.getRemarks()));
 		}
 	}
 

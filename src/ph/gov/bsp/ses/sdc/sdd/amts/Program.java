@@ -87,6 +87,35 @@ public class Program
 		}
 	}
 	
+	static void testLoadSamples() throws Exception
+	{
+		Connection conn = null;
+		
+		try
+		{
+			String connString = configuration.getSqliteConnectionString();
+			conn = DriverManager.getConnection(connString);
+			conn.setAutoCommit(false);
+			
+			List<Monitoring> samples = Monitoring.getSamples(50);
+			for (Monitoring sample : samples)
+			{
+				Monitoring.addNew(conn, sample);
+			}
+			
+			conn.commit();
+		}
+		finally
+		{
+			if (conn != null)
+			{
+				conn.close();
+			}
+		}
+		
+		System.exit(ExitCode.HARD_ABORT);
+	}
+	
 	public static String getUser()
 	{
 		return USER;
@@ -100,10 +129,7 @@ public class Program
 	public static void main(String[] args)
 	{
 		try
-		{			
-//			Program.USER_DOMAIN = System.getenv("USERDOMAIN");
-//			Program.USER_NAME = System.getenv("USERNAME");
-//			Program.setUser(String.format("%s\\%s", Program.USER_DOMAIN, Program.USER_NAME));
+		{	
 			
 			// #region Read configuration file
 			
@@ -164,6 +190,8 @@ public class Program
 			
 			// #endregion
 			
+			//testLoadSamples();
+						
 			final MainWindow mw = new MainWindow();
 			
 			// load settings
@@ -791,5 +819,38 @@ public class Program
 		}
 		
 		return success;
+	}
+
+	public static void updateReceiving(Shell parentShell, TableItem tableRow, int id) throws SQLException
+	{
+		Connection conn = null;
+		Monitoring item = null;
+		Monitoring edited = null;
+		
+		try
+		{
+			String connString = configuration.getSqliteConnectionString();
+			conn = DriverManager.getConnection(connString);
+			
+			item = Monitoring.getItem(conn, id);
+		}
+		finally
+		{
+			if (conn != null) conn.close();
+		}
+		
+		ReceivingDialog edit = new ReceivingDialog(parentShell, SWT.NONE);
+		if (item != null)
+		{
+			edit.setItem(item);
+			if (edit.open())
+			{
+				edited = edit.getEditedItem();
+				
+				List<Log> log = edit.getChangeLog();
+			}
+		}
+		
+		// TODO here
 	}
 }

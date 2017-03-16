@@ -114,7 +114,7 @@ public class MainWindow
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				System.out.println("tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
+				System.out.println("widgetSelected tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
 				switch (tabs.getSelectionIndex())
 				{
 					case 1:
@@ -126,7 +126,7 @@ public class MainWindow
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
-				System.out.println("tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
+				System.out.println("widgetDefaultSelected tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
 			}
 		});
 		

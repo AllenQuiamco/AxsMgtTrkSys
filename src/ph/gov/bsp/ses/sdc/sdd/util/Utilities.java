@@ -21,13 +21,7 @@ public final class Utilities
 	{
 		
 	}
-	
-	public static void main(String[] args)
-	{
-		// TODO Auto-generated method stub
 		
-	}
-	
 	public static String dump(Object o, PrintStream out)
 	{
 		StringBuilder sb = new StringBuilder();
@@ -100,5 +94,13 @@ public final class Utilities
 	public static String[] toArray(String ... strings)
 	{
 		return strings;
+	}
+
+	public static boolean equals(String s1, String s2)
+	{
+		if (s1 == null && s2 == null) return true;
+		else if (s1 != null && s2 == null) return false;
+		if (s1 == null && s2 != null) return false;
+		else return s1.equals(s2);
 	}
 }

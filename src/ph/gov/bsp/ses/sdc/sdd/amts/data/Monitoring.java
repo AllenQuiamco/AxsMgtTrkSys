@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -16,21 +18,23 @@ public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
 	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
+	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 	
 	private int id = -1; // 0 is test, any positive is actual data
 	private String folder;
 	private String requestType;
 	private String requestedBy;
-	private long receivedOn; // TODO catch NULL from database
+	private String receivedOn;
 	private String receivedBy;
 	private String approvalStatus;
 	private String assignedBy;
 	private String assignedTo;
-	private long assignedOn = -1;
+	private String assignedOn;
 	private String processDetails;
 	private String processedBy;
-	private long processedOn = -1;
-	private long resolvedOn = -1;
+	private String processedOn;
+	private String resolvedOn;
 	private String remarks;
 	
 	@Override
@@ -99,12 +103,12 @@ public class Monitoring implements Cloneable
 
 	public Date getReceivedOn()
 	{
-		return new Date(receivedOn);
+		return getDate(receivedOn);
 	}
 	
 	public void setReceivedOn(Date receivedOn)
 	{
-		this.receivedOn = receivedOn.getTime();
+		this.receivedOn = formatDate(receivedOn);
 	}
 
 	public String getReceivedBy()
@@ -149,12 +153,12 @@ public class Monitoring implements Cloneable
 
 	public Date getAssignedOn()
 	{
-		return new Date(assignedOn);
+		return getDate(assignedOn);
 	}
 
 	public void setAssignedOn(Date assignedOn)
 	{
-		this.assignedOn = assignedOn.getTime();
+		this.assignedOn = formatDate(assignedOn);
 	}
 
 	public String getProcessDetails()
@@ -179,22 +183,22 @@ public class Monitoring implements Cloneable
 
 	public Date getProcessedOn()
 	{
-		return new Date(processedOn);
+		return getDate(processedOn);
 	}
 
 	public void setProcessedOn(Date processedOn)
 	{
-		this.processedOn = processedOn.getTime();
+		this.processedOn = formatDate(processedOn);
 	}
 
 	public Date getResolvedOn()
 	{
-		return new Date(resolvedOn);
+		return getDate(resolvedOn);
 	}
 
 	public void setResolvedOn(Date resolvedOn)
 	{
-		this.resolvedOn = resolvedOn.getTime();
+		this.resolvedOn = formatDate(resolvedOn);
 	}
 
 	public String getRemarks()
@@ -207,14 +211,36 @@ public class Monitoring implements Cloneable
 		this.remarks = remarks;
 	}
 
+	public static Date getDate(String value)
+	{
+		Date retobj = null;
+		if (value == null) return retobj;
+		try
+		{
+			java.util.Date date = DATE_FORMATTER.parse(value);
+			retobj = new Date(date.getTime());
+		}
+		catch (ParseException pe)
+		{
+			pe.printStackTrace();
+		}
+		return retobj;
+	}
+	
+	public static String formatDate(Date value)
+	{
+		if (value == null) return null;
+		return DATE_FORMATTER.format(value);
+	}
+	
 	@SuppressWarnings("deprecation")
-	public static LinkedList<Monitoring> getSamples()
+	public static LinkedList<Monitoring> getSamples(int max)
 	{
 		LinkedList<Monitoring> retobj = new LinkedList<Monitoring>();
 		
 		Random random = new Random();
 		Monitoring item; 
-		int max = new Random().nextInt(10) + 1;
+		//int max = new Random().nextInt(10) + 1;		
 		
 		for(int i = 0; i < max; i++)
 		{
@@ -223,16 +249,16 @@ public class Monitoring implements Cloneable
 			item.folder = String.format("folder%08x", random.nextInt());
 			item.requestType = String.format("requestType%08x", random.nextInt());
 			item.requestedBy = String.format("requestedBy%08x", random.nextInt());
-			item.receivedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
+			item.setReceivedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.receivedBy = String.format("receivedBy%08x", random.nextInt());
 			item.approvalStatus = String.format("approvalStatus%08x", random.nextInt());
 			item.assignedBy = String.format("assignedBy%08x", random.nextInt());
 			item.assignedTo = String.format("assignedTo%08x", random.nextInt());
-			item.assignedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
+			item.setAssignedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.processDetails = String.format("processDetails%08x", random.nextInt());
 			item.processedBy = String.format("processedBy%08x", random.nextInt());
-			item.processedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
-			item.resolvedOn = new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1).getTime();
+			item.setProcessedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
+			item.setResolvedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.remarks = String.format("remarks%08x", random.nextInt());
 			retobj.add(item);
 		}
@@ -334,7 +360,7 @@ public class Monitoring implements Cloneable
 			insert.setString(1, item.folder);
 			insert.setString(2, item.requestType);
 			insert.setString(3, item.requestedBy);
-			insert.setLong(4, item.receivedOn);
+			insert.setString(4, item.receivedOn);
 			insert.setString(5,  item.receivedBy);
 			insert.setString(6, item.approvalStatus);
 			insert.setString(7, item.remarks);
@@ -363,6 +389,15 @@ public class Monitoring implements Cloneable
 		}
 		
 		return retval;
+	}
+
+	public static Monitoring getItem(Connection conn, int id) throws SQLException
+	{
+		List<Monitoring> rows = getRows(conn, "WHERE `ID`=" + id, "", "");
+		
+		if (rows.size() == 1) return rows.get(0);
+		else if (rows.size() == 0) return null;
+		else throw new SQLException("Too many rows for ID=" + id);
 	}
 	
 }
