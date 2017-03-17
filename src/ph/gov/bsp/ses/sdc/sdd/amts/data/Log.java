@@ -138,12 +138,15 @@ public class Log
 		return DATE_FORMATTER.format(value);
 	}
 	
-	public static void append(Connection conn, Log item) throws SQLException
+	public static void append(Connection conn, Log item, String user, Date date) throws SQLException
 	{
 		PreparedStatement insert = null;
 		
 		try
 		{
+			item.setEffectedOn(date);
+			item.setUserId(user);
+			
 			String insertNew = String.format("INSERT INTO %s ", TABLE_NAME);
 			insertNew += "(`UserID`,`Action`,`EffectedOn`,`TableName`,`FieldName`,`RowID`,`OldValue`,`NewValue`) ";
 			insertNew += "VALUES (?,?,?,?,?,?,?,?)";
@@ -164,6 +167,14 @@ public class Log
 		finally
 		{
 			if (insert != null) insert.close();
+		}
+	}
+
+	public static void append(Connection conn, List<Log> logs, String user, Date date) throws SQLException
+	{
+		for (Log log : logs)
+		{
+			append(conn, log, user, date);
 		}
 	}
 }

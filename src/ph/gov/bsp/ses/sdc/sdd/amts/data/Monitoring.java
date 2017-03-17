@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+
 public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
@@ -398,6 +400,32 @@ public class Monitoring implements Cloneable
 		if (rows.size() == 1) return rows.get(0);
 		else if (rows.size() == 0) return null;
 		else throw new SQLException("Too many rows for ID=" + id);
+	}
+
+	public static void update(Connection conn, List<Log> logs) throws SQLException
+	{
+		for (Log log : logs)
+		{
+			if (!Utilities.equals("update", log.getAction())) throw new SQLException("Invalid LOG.Action: " + log.getAction());
+			if (!Utilities.equals(TABLE_NAME, log.getTableName())) throw new SQLException("Wrong table name: " + log.getTableName());
+			
+			String updateString = String.format("UPDATE %s SET `%s`=? WHERE `ID`=?", TABLE_NAME, log.getFieldName());
+			PreparedStatement update = null;
+			try
+			{
+				update = conn.prepareStatement(updateString);
+				update.setString(1, log.getNewValue());
+				update.setInt(2, log.getRowId());
+				
+				int result = update.executeUpdate();
+				if (result < 1) throw new SQLException("No rows were inserted.");
+				else if (result > 1) throw new SQLException("More than one row was updated.");
+			}
+			finally
+			{
+				if (update != null) update.close();
+			}
+		}
 	}
 	
 }

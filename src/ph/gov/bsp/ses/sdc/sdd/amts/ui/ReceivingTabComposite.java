@@ -1,6 +1,5 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -16,11 +15,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-
-import ph.gov.bsp.ses.sdc.sdd.amts.Program;
-import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
-import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
-
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
@@ -28,6 +22,12 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+
+import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
+import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+
+
 
 public class ReceivingTabComposite extends Composite
 {
@@ -90,28 +90,24 @@ public class ReceivingTabComposite extends Composite
 		{
 			public void handleEvent(Event event)
 			{
-				//String string = event.detail == SWT.CHECK ? "Checked" : "Selected";
 				if (TableItem.class.isInstance(event.item))
 				{
 					final TableItem item = (TableItem)event.item;
-					getDisplay().asyncExec(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							item.setChecked(false);
-						}
-					});
-					String textId = item.getText();
-					int id = Integer.parseInt(textId);
 					
-					try
+					if (item.getChecked())
 					{
+						getDisplay().asyncExec(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								item.setChecked(false);
+							}
+						});
+						String textId = item.getText();
+						int id = Integer.parseInt(textId);
+						
 						Program.updateReceiving(parentShell, item, id);
-					}
-					catch (SQLException e)
-					{
-						e.printStackTrace();
 					}
 				}
 			}
@@ -225,20 +221,26 @@ public class ReceivingTabComposite extends Composite
 		this.table.removeAll();
 		
 		TableItem item;
-		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
 		for (Monitoring row : rows)
 		{
 			item = new TableItem(table, SWT.NONE);
-			item.setText(Utilities.toArray(
-					String.format("%d", row.getID()), 
-					row.getFolder(), 
-					row.getRequestType(),
-					row.getRequestedBy(), 
-					(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
-					row.getReceivedBy(),
-					row.getRemarks()));
+			setText(item, row);			
 		}
+	}
+
+	public static void setText(TableItem item, Monitoring row)
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
+		
+		item.setText(Utilities.toArray(
+				String.format("%d", row.getID()), 
+				row.getFolder(), 
+				row.getRequestType(),
+				row.getRequestedBy(), 
+				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+				row.getReceivedBy(),
+				row.getRemarks()));
 	}
 
 	public void displayEmpty()

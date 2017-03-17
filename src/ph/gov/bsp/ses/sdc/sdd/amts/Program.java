@@ -24,6 +24,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Program
 {
@@ -223,6 +224,18 @@ public class Program
 			t.printStackTrace();
 			System.exit(ExitCode.UNHANDLED_ERROR);
 		}
+	}
+	
+	public static Connection getConnection()
+	{
+		// TODO Wrap Connection instantiators to enable properties  
+		// see https://bitbucket.org/xerial/sqlite-jdbc/issues/27/allow-user-to-specify-busy-timeout-when
+		
+//		Properties props = new Properties ();
+//		props. put ("busy_timeout", "33000");
+//		Conection con = DriverManager.getConnection("jdbc:sqlite:", props);
+		
+		throw new NotImplementedException();
 	}
 	
 	public static void refreshReceivingTab(ReceivingTabComposite view, boolean forced)
@@ -761,7 +774,11 @@ public class Program
 		
 		ReceivingDialog edit = new ReceivingDialog(mainShell, SWT.NONE);
 		edit.setItem(item);
-		edit.open();
+		if (edit.open())
+		{
+			Monitoring edited = edit.getEditedItem();
+			newEntry(mainShell, edited);
+		}
 	}
 
 	/**
@@ -787,13 +804,12 @@ public class Program
 				Log logItem = new Log();
 				logItem.setUserId(Program.USER);
 				logItem.setAction("new entry");
-				logItem.setEffectedOn(new Date(System.currentTimeMillis())); // should be at most a few seconds from here ...
 				logItem.setTableName("MONITORING");
 				logItem.setRowId(rowId);
 				
-				Log.append(conn, logItem);
+				Log.append(conn, logItem, Program.USER, new Date(System.currentTimeMillis()));
 				
-				conn.commit(); // ... to here
+				conn.commit();
 				
 				success = true;
 			}
@@ -821,34 +837,65 @@ public class Program
 		return success;
 	}
 
-	public static void updateReceiving(Shell parentShell, TableItem tableRow, int id) throws SQLException
+	public static void updateReceiving(Shell parentShell, TableItem tableRow, int id)
 	{
-		Connection conn = null;
-		Monitoring item = null;
-		Monitoring edited = null;
-		
 		try
 		{
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
+			Connection conn = null;
+			Monitoring item = null;
 			
-			item = Monitoring.getItem(conn, id);
-		}
-		finally
-		{
-			if (conn != null) conn.close();
-		}
-		
-		ReceivingDialog edit = new ReceivingDialog(parentShell, SWT.NONE);
-		if (item != null)
-		{
-			edit.setItem(item);
-			if (edit.open())
+			try
 			{
-				edited = edit.getEditedItem();
+				String connString = configuration.getSqliteConnectionString();
+				conn = DriverManager.getConnection(connString);
 				
-				List<Log> log = edit.getChangeLog();
+				item = Monitoring.getItem(conn, id);
 			}
+			finally
+			{
+				if (conn != null) conn.close();
+			}
+			
+			ReceivingDialog edit = new ReceivingDialog(parentShell, SWT.APPLICATION_MODAL);
+			if (item != null)
+			{
+				edit.setItem(item);
+				if (edit.open())
+				{
+					List<Log> logs = edit.getChangeLog();
+					if (logs.size() <= 0) return;
+					
+					try
+					{
+						String connString = configuration.getSqliteConnectionString();
+						conn = DriverManager.getConnection(connString);
+						
+						conn.setAutoCommit(false);
+						
+						Monitoring.update(conn, logs);
+						Log.append(conn, logs, Program.USER, new Date(System.currentTimeMillis()));
+						
+						conn.commit();
+						
+						Monitoring row = Monitoring.getItem(conn, id);
+						ReceivingTabComposite.setText(tableRow, row);
+					}
+					catch (Exception e)
+					{
+						conn.rollback();
+						throw e;
+					}
+					finally
+					{
+						if (conn != null) conn.close(); 
+					}
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(parentShell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 		
 		// TODO here

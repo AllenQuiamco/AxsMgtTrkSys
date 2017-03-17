@@ -1,6 +1,7 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.swt.widgets.Composite;
@@ -39,9 +40,6 @@ public class ReceivingDialog extends Dialog
 {
 	private Monitoring item;
 	private Monitoring itemEditable;
-	private boolean editedRequestType = false;
-	private boolean editedRequestedBy = false;
-	private boolean editedRemarks = false;
 	protected boolean result;
 	protected Shell shell;
 	private Text txtId;
@@ -85,10 +83,12 @@ public class ReceivingDialog extends Dialog
 	{
 		super(parent, style);
 		setText("SWT Dialog");
+		result = false;
 	}
 	
 	/**
-	 * Open the dialog.
+	 * Open the dialog. If the Save button is clicked, the return value is 
+	 * <code>true</code>. If t
 	 * @return the result
 	 */
 	public boolean open()
@@ -112,7 +112,7 @@ public class ReceivingDialog extends Dialog
 	 */
 	private void createContents()
 	{
-		shell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
+		shell = new Shell(getParent(), SWT.SHELL_TRIM);
 		shell.setSize(450, 312);
 		shell.setText("Receiving Details");
 		shell.setLayout(new FormLayout());
@@ -128,10 +128,8 @@ public class ReceivingDialog extends Dialog
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if (Program.newEntry(shell, itemEditable))
-				{
-					shell.close();
-				}
+				result = true;
+				shell.close();
 			}
 		});
 		btnSave.setText("Save");
@@ -141,7 +139,7 @@ public class ReceivingDialog extends Dialog
 		FormData fd_cmpDetails = new FormData();
 		fd_cmpDetails.bottom = new FormAttachment(cmpSave);
 		fd_cmpDetails.left = new FormAttachment(0);
-		fd_cmpDetails.right = new FormAttachment(100);
+		fd_cmpDetails.right = new FormAttachment(100, -6);
 		fd_cmpDetails.top = new FormAttachment(0);
 		cmpDetails.setLayoutData(fd_cmpDetails);
 		
@@ -241,12 +239,10 @@ public class ReceivingDialog extends Dialog
 						if (Utilities.equals(item.getRequestType(), itemEditable.getRequestType()))
 						{
 							txtRequestType.setBackground(getDefaultColor("txtRequestType.background"));
-							editedRequestType = false;
 						}
 						else 
 						{
 							txtRequestType.setBackground(getColor_BG_CHANGED_SETTING());
-							editedRequestType = true;
 						}
 					}
 				});
@@ -274,7 +270,7 @@ public class ReceivingDialog extends Dialog
 		fd_txtRequestedBy.left = new FormAttachment(0, 74);
 		txtRequestedBy.setLayoutData(fd_txtRequestedBy);
 		txtRequestedBy.setText("Requested by");
-		this.defaultColors.put("txtRequestedBy.background", txtRequestType.getBackground());
+		this.defaultColors.put("txtRequestedBy.background", txtRequestedBy.getBackground());
 		txtRequestedBy.addModifyListener(new ModifyListener()
 		{
 			public void modifyText(ModifyEvent e)
@@ -287,12 +283,10 @@ public class ReceivingDialog extends Dialog
 						if (Utilities.equals(item.getRequestedBy(), itemEditable.getRequestedBy()))
 						{
 							txtRequestedBy.setBackground(getDefaultColor("txtRequestedBy.background"));
-							editedRequestedBy = false;
 						}
 						else 
 						{
 							txtRequestedBy.setBackground(getColor_BG_CHANGED_SETTING());
-							editedRequestedBy = true;
 						}
 					}
 				});
@@ -314,23 +308,30 @@ public class ReceivingDialog extends Dialog
 		fd_txtRemarks.left = new FormAttachment(0, 74);
 		txtRemarks.setLayoutData(fd_txtRemarks);
 		txtRemarks.setText("Remarks\r\n2\r\n3\r\n4\r\n5\r\n6");
+		this.defaultColors.put("txtRemarks.background", txtRemarks.getBackground());
+		txtRemarks.addModifyListener(new ModifyListener()
+		{
+			public void modifyText(ModifyEvent e)
+			{
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
+						{
+							txtRemarks.setBackground(getDefaultColor("txtRemarks.background"));
+						}
+						else 
+						{
+							txtRemarks.setBackground(getColor_BG_CHANGED_SETTING());
+						}
+					}
+				});
+			}
+		});
+		
 		initDataBindings();
-	}
-
-	public Monitoring getItem()
-	{
-		return item;
-	}
-
-	public void setItem(Monitoring item)
-	{
-		this.item = item;
-		this.itemEditable = item.clone();
-	}
-
-	public Monitoring getEditedItem()
-	{
-		return this.itemEditable;
 	}
 	
 	protected DataBindingContext initDataBindings() {
@@ -370,10 +371,65 @@ public class ReceivingDialog extends Dialog
 		return bindingContext;
 	}
 
+	public Monitoring getItem()
+	{
+		return item;
+	}
+
+	public void setItem(Monitoring item)
+	{
+		this.item = item;
+		this.itemEditable = item.clone();
+	}
+
+	public Monitoring getEditedItem()
+	{
+		return this.itemEditable;
+	}
+	
 	public List<Log> getChangeLog()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		List<Log> logs = new LinkedList<Log>();
+		
+		Log log = null;
+		
+		if (!Utilities.equals(item.getRequestType(), itemEditable.getRequestType()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("RequestType");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getRequestType());
+			log.setNewValue(itemEditable.getRequestType());
+			logs.add(log);
+		}
+		
+		if (!Utilities.equals(item.getRequestedBy(), itemEditable.getRequestedBy()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("RequestedBy");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getRequestedBy());
+			log.setNewValue(itemEditable.getRequestedBy());
+			logs.add(log);
+		}
+		
+		if (!Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("Remarks");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getRemarks());
+			log.setNewValue(itemEditable.getRemarks());
+			logs.add(log);
+		}
+		
+		return logs;
 	}
 	
 	private Color getColor_BG_CHANGED_SETTING()
