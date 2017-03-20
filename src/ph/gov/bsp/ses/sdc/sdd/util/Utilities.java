@@ -103,4 +103,15 @@ public final class Utilities
 		if (s1 == null && s2 != null) return false;
 		else return s1.equals(s2);
 	}
+
+	/**
+	 * Returns <code>true</code> if the argument {@link String} is null, empty 
+	 * or all characters are whitespace or unprintable; otherwise, 
+	 * <code>false</code>.
+	 */
+	public static boolean isNullOrBlank(String string)
+	{
+		if (string == null) return true;
+		return (string.trim().isEmpty());
+	}
 }

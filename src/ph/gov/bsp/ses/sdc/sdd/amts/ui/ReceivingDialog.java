@@ -35,6 +35,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 
 public class ReceivingDialog extends Dialog
 {
@@ -112,8 +113,10 @@ public class ReceivingDialog extends Dialog
 	 */
 	private void createContents()
 	{
-		shell = new Shell(getParent(), SWT.SHELL_TRIM);
-		shell.setSize(450, 312);
+		shell = new Shell(getParent(), SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
+		shell.setImage(SWTResourceManager.getImage(ReceivingDialog.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
+		shell.setMinimumSize(new Point(450, 326));
+		shell.setSize(450, 326);
 		shell.setText("Receiving Details");
 		shell.setLayout(new FormLayout());
 		

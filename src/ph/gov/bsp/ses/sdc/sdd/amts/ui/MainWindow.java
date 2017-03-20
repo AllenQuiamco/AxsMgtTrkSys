@@ -21,7 +21,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.browser.Browser;
@@ -58,7 +57,8 @@ public class MainWindow
 	private Text txtLocalCopy;
 	private Hashtable<String, Color> defaultColors = new Hashtable<String, Color>();
 
-	private ReceivingTabComposite xcmpReceivingTab;
+	private ReceivingComposite xcmpReceiving;
+	private AssignmentComposite xcmpAssignment;
 	
 	public MainWindow()
 	{
@@ -103,30 +103,25 @@ public class MainWindow
 			@Override
 			public void shellClosed(ShellEvent e)
 			{
-				close(e);
+				//close(e);
+				e.doit = true; // TODO Save window position information
 			}
 		});
 		
 		final TabFolder tabs = new TabFolder(shell, SWT.NONE);
-		tabs.addSelectionListener(new SelectionListener()
-		{
-			
+		tabs.addSelectionListener(new SelectionAdapter()
+		{	
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				System.out.println("widgetSelected tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
 				switch (tabs.getSelectionIndex())
 				{
 					case 1:
-						Program.refreshReceivingTab(xcmpReceivingTab, false);
+						Program.refreshReceivingTab(xcmpReceiving, false);
+					case 2:
+						Program.refreshAssignmentTab(xcmpAssignment, false);
 						break;
 				}
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				System.out.println("widgetDefaultSelected tabs.getSelectionIndex() := " + tabs.getSelectionIndex());
 			}
 		});
 		
@@ -151,7 +146,7 @@ public class MainWindow
 		lblLoggedOnAs.setText("Logged on as:");
 		
 		txtLoggedOnAs = new Text(cmpInfoUser, SWT.BORDER);
-		txtLoggedOnAs.setText(Program.getUser());
+		txtLoggedOnAs.setText(Program.USER);
 		txtLoggedOnAs.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
 		final Button btnInfoBrowserBack = new Button(cmpInfo, SWT.FLAT);
@@ -221,16 +216,16 @@ public class MainWindow
 		TabItem tabReceiving = new TabItem(tabs, SWT.NONE);
 		tabReceiving.setText("Receiving");
 		
-		xcmpReceivingTab = new ReceivingTabComposite(tabs, SWT.NONE);
-		tabReceiving.setControl(xcmpReceivingTab);
+		xcmpReceiving = new ReceivingComposite(tabs, SWT.NONE);
+		tabReceiving.setControl(xcmpReceiving);
 		RowLayout rl_cmpReceiving = new RowLayout(SWT.VERTICAL);
 		rl_cmpReceiving.wrap = false;
 		
 		TabItem tabAssignment = new TabItem(tabs, SWT.NONE);
 		tabAssignment.setText("Assignment");
 		
-		Composite cmpAssignment = new Composite(tabs, SWT.NONE);
-		tabAssignment.setControl(cmpAssignment);
+		xcmpAssignment = new AssignmentComposite(tabs, SWT.NONE);
+		tabAssignment.setControl(xcmpAssignment);
 		
 		TabItem tabProcessing = new TabItem(tabs, SWT.NONE);
 		tabProcessing.setText("Processing");

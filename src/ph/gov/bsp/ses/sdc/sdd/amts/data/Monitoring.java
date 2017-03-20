@@ -19,7 +19,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
-	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
+	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
 	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 	
@@ -29,7 +29,7 @@ public class Monitoring implements Cloneable
 	private String requestedBy;
 	private String receivedOn;
 	private String receivedBy;
-	private String approvalStatus;
+	private String status;
 	private String assignedBy;
 	private String assignedTo;
 	private String assignedOn;
@@ -50,7 +50,7 @@ public class Monitoring implements Cloneable
 		clone.requestedBy = this.requestedBy;
 		clone.receivedOn = this.receivedOn;
 		clone.receivedBy = this.receivedBy;
-		clone.approvalStatus = this.approvalStatus;
+		clone.status = this.status;
 		clone.assignedBy = this.assignedBy;
 		clone.assignedTo = this.assignedTo;
 		clone.assignedOn = this.assignedOn;
@@ -123,14 +123,14 @@ public class Monitoring implements Cloneable
 		this.receivedBy = receivedBy;
 	}
 
-	public String getApprovalStatus()
+	public String getStatus()
 	{
-		return approvalStatus;
+		return status;
 	}
 
-	public void setApprovalStatus(String approvalStatus)
+	public void setStatus(String status)
 	{
-		this.approvalStatus = approvalStatus;
+		this.status = status;
 	}
 
 	public String getAssignedBy()
@@ -253,7 +253,7 @@ public class Monitoring implements Cloneable
 			item.requestedBy = String.format("requestedBy%08x", random.nextInt());
 			item.setReceivedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.receivedBy = String.format("receivedBy%08x", random.nextInt());
-			item.approvalStatus = String.format("approvalStatus%08x", random.nextInt());
+			item.status = String.format("status%08x", random.nextInt());
 			item.assignedBy = String.format("assignedBy%08x", random.nextInt());
 			item.assignedTo = String.format("assignedTo%08x", random.nextInt());
 			item.setAssignedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
@@ -268,23 +268,81 @@ public class Monitoring implements Cloneable
 		return retobj;
 	}
 
+	private static String buildWhere(String ... strings)
+	{
+		if ((strings.length % 2) != 0) throw new IllegalArgumentException("Parameter array does not have an even number of elements.");
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (int i = 0; i < strings.length; i += 2)
+		{
+			String column = strings[i];
+			String filter = strings[i + 1];
+			
+			String part = buildWhere(column, filter);
+			
+			if (Utilities.isNullOrBlank(part)) continue;
+			
+			if (sb.length() > 0) sb.append(" OR ");
+			
+			sb.append(part);
+		}
+		
+		if (sb.length() > 0) sb.insert(0, "WHERE ");
+		
+		return sb.toString();
+	}
+	
+	private static String buildWhere(String column, String filter)
+	{
+		if (Utilities.isNullOrBlank(column)) return "";
+		if (Utilities.isNullOrBlank(filter)) return "";
+		
+		column = column.replace("'", "").replace("\"", "").replace("-", "").replace(";", "");
+		filter = filter.replace("'", "").replace("\"", "").replace("-", "").replace(";", "");
+		
+		String[] filters = null;
+		
+		if (filter.contains("|")) filters = filter.split("|");
+		else filters = new String[] { filter };
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (String filterItem : filters)
+		{
+			if (Utilities.isNullOrBlank(filterItem)) continue;
+			if (sb.length() > 0) sb.append(" OR ");
+			sb.append(String.format("%s LIKE '%%%s%%'", column, filter));
+		}
+		
+		return sb.toString();
+	}
+
 	public static int queryRowsReceiving(Connection conn, String filterType, String filterFrom) throws SQLException
 	{
-		String where = ""; // TODO process filters
+		String where = buildWhere(Utilities.toArray("RequestType", filterType, "RequestedBy", filterFrom));
 		
 		return queryRows(conn, where);
 	}
 
 	private static int queryRows(Connection conn, String where) throws SQLException
 	{
-		Statement select = conn.createStatement();
-		ResultSet result = select.executeQuery(String.format("SELECT COUNT(*) FROM %s %s", TABLE_NAME, where));
-		return result.getInt(1);
+		Statement select = null;
+		try 
+		{
+			select = conn.createStatement();
+			ResultSet result = select.executeQuery(String.format("SELECT COUNT(*) FROM %s %s", TABLE_NAME, where));
+			return result.getInt(1);
+		}
+		finally
+		{
+			if (select != null) select.close();
+		}
 	}
 
 	public static List<Monitoring> getRowsReceiving(Connection conn, String filterType, String filterFrom, int rowStart, int rowEnd) throws SQLException
 	{
-		String where = ""; // TODO process filters
+		String where = buildWhere("RequestType", filterType, "RequestedBy", filterFrom);
 		
 		return getRows(conn, where, rowStart, rowEnd);
 	}
@@ -356,7 +414,7 @@ public class Monitoring implements Cloneable
 		try
 		{
 			String insertNew = String.format("INSERT INTO %s ", TABLE_NAME);
-			insertNew += "(`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`ApprovalStatus`,`Remarks`) ";
+			insertNew += "(`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`Remarks`) ";
 			insertNew += "VALUES (?,?,?,?,?,?,?)";
 			insert = conn.prepareStatement(insertNew);
 			insert.setString(1, item.folder);
@@ -364,7 +422,7 @@ public class Monitoring implements Cloneable
 			insert.setString(3, item.requestedBy);
 			insert.setString(4, item.receivedOn);
 			insert.setString(5,  item.receivedBy);
-			insert.setString(6, item.approvalStatus);
+			insert.setString(6, item.status);
 			insert.setString(7, item.remarks);
 			
 			int result = insert.executeUpdate();
@@ -427,5 +485,20 @@ public class Monitoring implements Cloneable
 			}
 		}
 	}
+
+	public static int queryRowsAssignment(Connection conn, String filterStatus, String filterType, String filterFrom) throws SQLException
+	{
+		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "RequestedBy", filterFrom);
+		
+		return queryRows(conn, where);
+	}
+
+	public static List<Monitoring> getRowsAssignment(Connection conn, String filterStatus, String filterType, String filterFrom, int rowStart, int rowEnd) throws SQLException
+	{
+		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "RequestedBy", filterFrom);
+		
+		return getRows(conn, where, rowStart, rowEnd);
+	}
+	
 	
 }

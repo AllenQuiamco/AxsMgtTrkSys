@@ -17,9 +17,10 @@ import org.eclipse.swt.widgets.*;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Version;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingDialog;
-import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingTabComposite;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingComposite;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
@@ -28,12 +29,11 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Program
 {
-//	static String USER_DOMAIN;
-//	static String USER_NAME;
-	private static String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
+	public static String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
 	
 	static Configuration configuration = null;
 	private static boolean receivingInitialized;
+	private static boolean assignmentInitialized;
 	
 	static void testSQLITE()
 	{
@@ -116,17 +116,7 @@ public class Program
 		
 		System.exit(ExitCode.HARD_ABORT);
 	}
-	
-	public static String getUser()
-	{
-		return USER;
-	}
-
-//	public static void setUser(String user)
-//	{
-//		USER = user;
-//	}
-	
+		
 	public static void main(String[] args)
 	{
 		try
@@ -236,79 +226,6 @@ public class Program
 //		Conection con = DriverManager.getConnection("jdbc:sqlite:", props);
 		
 		throw new NotImplementedException();
-	}
-	
-	public static void refreshReceivingTab(ReceivingTabComposite view, boolean forced)
-	{
-		if (receivingInitialized && !forced) return;
-		
-		Connection conn = null;
-		
-		try
-		{
-			// get filter criteria
-			String filterType = view.getFilterType();
-			String filterFrom = view.getFilterFrom();
-			
-			// get total row size from filter
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
-			int rowTotal = Monitoring.queryRowsReceiving(conn, filterType, filterFrom);
-			
-			// get pagination
-			int rowStart = view.getRowStart();
-			int rowEnd = view.getRowEnd();
-			
-			// #region clean pagination data 
-			
-			// switch if unordered
-			if (rowStart > rowEnd) 
-			{
-				int temp = rowEnd;
-				rowEnd = rowStart;
-				rowStart = temp;
-			}
-			
-			int rowDiff = rowEnd - rowStart;
-			
-			if (rowStart > rowTotal) 
-			{
-				rowStart = 1;
-				rowEnd = rowStart + rowDiff;
-			}
-			
-			if (rowEnd > rowTotal) rowEnd = rowTotal;
-			
-			// #endregion
-			
-			// access database and get rows using search criteria
-			List<Monitoring> rows = Monitoring.getRowsReceiving(conn, filterType, filterFrom, rowStart, rowEnd);
-			
-			// remove original children
-			view.clear();
-			
-			if (rowTotal == 0) view.displayEmpty();
-			else view.display(rows, rowStart, rowEnd, rowTotal);
-			
-			receivingInitialized = true;
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-		}
-		finally
-		{
-			if (conn != null) 
-				try
-				{
-					conn.close();
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
-		}
 	}
 	
 	// #region UI - Settings
@@ -712,12 +629,85 @@ public class Program
 
 	// #endregion
 	
+	public static void refreshReceivingTab(ReceivingComposite view, boolean forced)
+	{
+		if (receivingInitialized && !forced) return;
+		
+		Connection conn = null;
+		
+		try
+		{
+			// get filter criteria
+			String filterType = view.getFilterType();
+			String filterFrom = view.getFilterFrom();
+			
+			// get total row size from filter
+			String connString = configuration.getSqliteConnectionString();
+			conn = DriverManager.getConnection(connString);
+			int rowTotal = Monitoring.queryRowsReceiving(conn, filterType, filterFrom);
+			
+			// get pagination
+			int rowStart = view.getRowStart();
+			int rowEnd = view.getRowEnd();
+			
+			// #region clean pagination data 
+			
+			// switch if unordered
+			if (rowStart > rowEnd) 
+			{
+				int temp = rowEnd;
+				rowEnd = rowStart;
+				rowStart = temp;
+			}
+			
+			int rowDiff = rowEnd - rowStart;
+			
+			if (rowStart > rowTotal) 
+			{
+				rowStart = 1;
+				rowEnd = rowStart + rowDiff;
+			}
+			
+			if (rowEnd > rowTotal) rowEnd = rowTotal;
+			
+			// #endregion
+			
+			// access database and get rows using search criteria
+			List<Monitoring> rows = Monitoring.getRowsReceiving(conn, filterType, filterFrom, rowStart, rowEnd);
+			
+			// remove original children
+			view.clear();
+			
+			if (rowTotal == 0) view.displayEmpty();
+			else view.display(rows, rowStart, rowEnd, rowTotal);
+			
+			receivingInitialized = true;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		finally
+		{
+			if (conn != null) 
+				try
+				{
+					conn.close();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+		}
+	}
+	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
 	 */
-	public static void receive(Shell mainShell, SelectionEvent buttonSelectedEvent)
+	public static void receive(Shell shell, SelectionEvent buttonSelectedEvent)
 	{
-		FileDialog fd = new FileDialog(mainShell, SWT.OPEN | SWT.MULTI);
+		FileDialog fd = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
 		fd.setFilterExtensions(Utilities.toArray("*.*"));
 		fd.setText("Select reference files");
 		String output = fd.open();
@@ -743,7 +733,7 @@ public class Program
 		
 		if (!dirMade)
 		{
-			MsgBox.show(mainShell, String.format("Unable to create folder in %s after %d tries.", dirFileServer, configuration.mkdirTries), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+			MsgBox.show(shell, String.format("Unable to create folder in %s after %d tries.", dirFileServer, configuration.mkdirTries), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 			return;
 		}	
 		
@@ -758,7 +748,7 @@ public class Program
 			}
 			catch (IOException e)
 			{
-				MsgBox.show(mainShell, String.format("Unable to copy file \"%s\" to \"%s\".", sourceFile.getAbsolutePath(), targetFile.getAbsolutePath()), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+				MsgBox.show(shell, String.format("Unable to copy file \"%s\" to \"%s\".", sourceFile.getAbsolutePath(), targetFile.getAbsolutePath()), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 				e.printStackTrace();
 				return;
 			}
@@ -770,14 +760,14 @@ public class Program
 		item.setFolder(folder);
 		item.setReceivedOn(new Date(receivedOn));
 		item.setReceivedBy(Program.USER);
-		item.setApprovalStatus("UNAPPROVED");
+		item.setStatus("UNAPPROVED");
 		
-		ReceivingDialog edit = new ReceivingDialog(mainShell, SWT.NONE);
+		ReceivingDialog edit = new ReceivingDialog(shell, SWT.NONE);
 		edit.setItem(item);
 		if (edit.open())
 		{
 			Monitoring edited = edit.getEditedItem();
-			newEntry(mainShell, edited);
+			newEntry(shell, edited);
 		}
 	}
 
@@ -837,7 +827,7 @@ public class Program
 		return success;
 	}
 
-	public static void updateReceiving(Shell parentShell, TableItem tableRow, int id)
+	public static void updateReceiving(Shell shell, TableItem tableItem, int id)
 	{
 		try
 		{
@@ -856,7 +846,7 @@ public class Program
 				if (conn != null) conn.close();
 			}
 			
-			ReceivingDialog edit = new ReceivingDialog(parentShell, SWT.APPLICATION_MODAL);
+			ReceivingDialog edit = new ReceivingDialog(shell, SWT.APPLICATION_MODAL);
 			if (item != null)
 			{
 				edit.setItem(item);
@@ -878,7 +868,7 @@ public class Program
 						conn.commit();
 						
 						Monitoring row = Monitoring.getItem(conn, id);
-						ReceivingTabComposite.setText(tableRow, row);
+						ReceivingComposite.setText(tableItem, row);
 					}
 					catch (Exception e)
 					{
@@ -895,9 +885,89 @@ public class Program
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			MsgBox.show(parentShell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+			MsgBox.show(shell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 		
 		// TODO here
+	}
+
+	public static void refreshAssignmentTab(AssignmentComposite view, boolean forced)
+	{
+		if (assignmentInitialized && !forced) return;
+		
+		Connection conn = null;
+		
+		try
+		{
+			// get filter criteria
+			String filterStatus = view.getFilterStatus();
+			String filterType = view.getFilterType();
+			String filterFrom = view.getFilterFrom();
+			
+			// get total row size from filter
+			String connString = configuration.getSqliteConnectionString();
+			conn = DriverManager.getConnection(connString);
+			int rowTotal = Monitoring.queryRowsAssignment(conn, filterStatus, filterType, filterFrom);
+			
+			// get pagination
+			int rowStart = view.getRowStart();
+			int rowEnd = view.getRowEnd();
+			
+			// #region clean pagination data 
+			
+			// switch if unordered
+			if (rowStart > rowEnd) 
+			{
+				int temp = rowEnd;
+				rowEnd = rowStart;
+				rowStart = temp;
+			}
+			
+			int rowDiff = rowEnd - rowStart;
+			
+			if (rowStart > rowTotal) 
+			{
+				rowStart = 1;
+				rowEnd = rowStart + rowDiff;
+			}
+			
+			if (rowEnd > rowTotal) rowEnd = rowTotal;
+			
+			// #endregion
+			
+			// access database and get rows using search criteria
+			List<Monitoring> rows = Monitoring.getRowsAssignment(conn, filterStatus, filterType, filterFrom, rowStart, rowEnd);
+			
+			// remove original children
+			view.clear();
+			
+			if (rowTotal == 0) view.displayEmpty();
+			else view.display(rows, rowStart, rowEnd, rowTotal);
+			
+			assignmentInitialized = true;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		finally
+		{
+			if (conn != null) 
+				try
+				{
+					conn.close();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+		}
+	}
+
+	public static void updateAssignment(Shell shell, TableItem item, int id)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }
