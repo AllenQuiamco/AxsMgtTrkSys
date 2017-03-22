@@ -27,16 +27,18 @@ import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 
+import org.eclipse.swt.widgets.Combo;
+
 public class AssignmentComposite extends Composite
 {
-	
+	private static final String[] statusSelection = new String[] {"ALL", "NEW", "APPROVED", "DISAPPROVED", "CANCELLED"};
 	private PaginationComposite xcmpPagination;
 	private Shell parentShell;
 	private AssignmentComposite self;
 	private Text txtType;
 	private Text txtFrom;
 	private Table table;
-	private Text txtStatus;
+	private Combo txtStatus;
 
 	/**
 	 * Create the composite.
@@ -99,9 +101,10 @@ public class AssignmentComposite extends Composite
 		lblStatus.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		lblStatus.setText("Status");
 		
-		txtStatus = new Text(grpFilter, SWT.BORDER);
-		txtStatus.setText("unassigned");
+		txtStatus = new Combo(grpFilter, SWT.READ_ONLY);
+		txtStatus.setItems(statusSelection);
 		txtStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		txtStatus.select(0);
 		
 		Label lblType = new Label(grpFilter, SWT.NONE);
 		lblType.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -294,7 +297,9 @@ public class AssignmentComposite extends Composite
 	
 	public String getFilterStatus()
 	{
-		return this.txtStatus.getText();
+		String text = this.txtStatus.getText(); 
+		if (text.equals("ALL")) return "";
+		else return text;
 	}
 	
 	public String getFilterType()

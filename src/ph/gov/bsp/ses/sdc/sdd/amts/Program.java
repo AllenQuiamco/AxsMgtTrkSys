@@ -760,7 +760,7 @@ public class Program
 		item.setFolder(folder);
 		item.setReceivedOn(new Date(receivedOn));
 		item.setReceivedBy(Program.USER);
-		item.setStatus("UNAPPROVED");
+		item.setStatus("NEW");
 		
 		ReceivingDialog edit = new ReceivingDialog(shell, SWT.NONE);
 		edit.setItem(item);
@@ -846,9 +846,10 @@ public class Program
 				if (conn != null) conn.close();
 			}
 			
-			ReceivingDialog edit = new ReceivingDialog(shell, SWT.APPLICATION_MODAL);
 			if (item != null)
 			{
+				ReceivingDialog edit = new ReceivingDialog(shell, SWT.APPLICATION_MODAL);
+				
 				edit.setItem(item);
 				if (edit.open())
 				{
@@ -881,14 +882,16 @@ public class Program
 					}
 				}
 			}
+			else
+			{
+				// TODO Handle when item is null
+			}
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 			MsgBox.show(shell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
-		
-		// TODO here
 	}
 
 	public static void refreshAssignmentTab(AssignmentComposite view, boolean forced)
@@ -968,6 +971,6 @@ public class Program
 	public static void updateAssignment(Shell shell, TableItem item, int id)
 	{
 		// TODO Auto-generated method stub
-		
+		System.out.println("Program.updateAssignment id := " + id);
 	}
 }
