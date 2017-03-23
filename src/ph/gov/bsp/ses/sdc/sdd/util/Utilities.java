@@ -100,8 +100,19 @@ public final class Utilities
 	{
 		if (s1 == null && s2 == null) return true;
 		else if (s1 != null && s2 == null) return false;
-		if (s1 == null && s2 != null) return false;
+		else if (s1 == null && s2 != null) return false;
 		else return s1.equals(s2);
+	}
+	
+	public static boolean equals(String s1, String s2, boolean nullIsEmpty)
+	{
+		if (nullIsEmpty) 
+		{
+			if (s1 == null) s1 = "";
+			if (s2 == null) s2 = "";
+		}
+		
+		return equals(s1, s2);
 	}
 
 	/**
@@ -113,5 +124,17 @@ public final class Utilities
 	{
 		if (string == null) return true;
 		return (string.trim().isEmpty());
+	}
+
+	public static void threadSleep(long i)
+	{
+		try
+		{
+			Thread.sleep(i);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

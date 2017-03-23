@@ -18,7 +18,9 @@ import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Version;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentComposite;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.ProcessingComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingComposite;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
@@ -232,7 +234,6 @@ public class Program
 	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
-	 * <p>WARNING: This method asynchronously modifies a UI element.</p>
 	 */
 	public static void browseSqliteDb(final MainWindow main, SelectionEvent buttonSelectedEvent)
 	{
@@ -244,7 +245,7 @@ public class Program
 		final String selectedFile = fd.open();
 		if (selectedFile != null)
 		{
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -257,7 +258,6 @@ public class Program
 	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
-	 * <p>WARNING: This method asynchronously modifies a UI element.</p>
 	 */
 	public static void browseFileServer(final MainWindow main, SelectionEvent e)
 	{
@@ -266,7 +266,7 @@ public class Program
 		final String selectedDirectory = dd.open();
 		if (selectedDirectory != null)
 		{
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -279,7 +279,6 @@ public class Program
 	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
-	 * <p>WARNING: This method asynchronously modifies a UI element.</p>
 	 */
 	public static void browseLocalCopy(final MainWindow main, SelectionEvent e)
 	{
@@ -288,7 +287,7 @@ public class Program
 		final String selectedDirectory = dd.open();
 		if (selectedDirectory != null)
 		{
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -401,7 +400,7 @@ public class Program
 		final String setting = filepath;
 		
 		// return the cleaned path to the text box
-		main.getDisplay().asyncExec(new Runnable()
+		main.getDisplay().syncExec(new Runnable()
 		{
 			@Override
 			public void run()
@@ -449,7 +448,7 @@ public class Program
 			if (valid)
 			{
 				// Set background to show it's valid
-				main.getDisplay().asyncExec(new Runnable()
+				main.getDisplay().syncExec(new Runnable()
 				{
 					@Override
 					public void run()
@@ -473,7 +472,7 @@ public class Program
 			else
 			{
 				// Set background to show it's invalid
-				main.getDisplay().asyncExec(new Runnable()
+				main.getDisplay().syncExec(new Runnable()
 				{
 					@Override
 					public void run()
@@ -489,7 +488,7 @@ public class Program
 		else
 		{ 
 			// Set background to show it's invalid
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -497,6 +496,7 @@ public class Program
 					main.getTextSqliteDb().setBackground(main.getColor_BG_INVALID_SETTING());
 				}
 			});
+			
 			MsgBox.show(main.getShell(), String.format("The path %s is not an existing file.", setting), "Invalid path", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 	}
@@ -513,7 +513,7 @@ public class Program
 		final String setting = filepath;
 		
 		// return the cleaned path to the text box
-		main.getDisplay().asyncExec(new Runnable()
+		main.getDisplay().syncExec(new Runnable()
 		{
 			@Override
 			public void run()
@@ -528,7 +528,7 @@ public class Program
 			// No further checks needed
 			
 			// Set background to show it's valid
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -552,7 +552,7 @@ public class Program
 		else
 		{ 
 			// Set background to show it's invalid
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -560,6 +560,7 @@ public class Program
 					main.getTextFileServer().setBackground(main.getColor_BG_INVALID_SETTING());
 				}
 			});
+			
 			MsgBox.show(main.getShell(), String.format("The path %s is not an existing directory.", setting), "Invalid path", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 	}
@@ -576,7 +577,7 @@ public class Program
 		final String setting = filepath;
 		
 		// return the cleaned path to the text box
-		main.getDisplay().asyncExec(new Runnable()
+		main.getDisplay().syncExec(new Runnable()
 		{
 			@Override
 			public void run()
@@ -591,7 +592,7 @@ public class Program
 			// No further checks needed
 			
 			// Set background to show it's valid
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -615,7 +616,7 @@ public class Program
 		else
 		{
 			// Set background to show it's invalid
-			main.getDisplay().asyncExec(new Runnable()
+			main.getDisplay().syncExec(new Runnable()
 			{
 				@Override
 				public void run()
@@ -623,84 +624,12 @@ public class Program
 					main.getTextLocalCopy().setBackground(main.getColor_BG_INVALID_SETTING());
 				}
 			});
+			
 			MsgBox.show(main.getShell(), String.format("The path %s is not an existing directory.", setting), "Invalid path", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 	}
 
 	// #endregion
-	
-	public static void refreshReceivingTab(ReceivingComposite view, boolean forced)
-	{
-		if (receivingInitialized && !forced) return;
-		
-		Connection conn = null;
-		
-		try
-		{
-			// get filter criteria
-			String filterType = view.getFilterType();
-			String filterFrom = view.getFilterFrom();
-			
-			// get total row size from filter
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
-			int rowTotal = Monitoring.queryRowsReceiving(conn, filterType, filterFrom);
-			
-			// get pagination
-			int rowStart = view.getRowStart();
-			int rowEnd = view.getRowEnd();
-			
-			// #region clean pagination data 
-			
-			// switch if unordered
-			if (rowStart > rowEnd) 
-			{
-				int temp = rowEnd;
-				rowEnd = rowStart;
-				rowStart = temp;
-			}
-			
-			int rowDiff = rowEnd - rowStart;
-			
-			if (rowStart > rowTotal) 
-			{
-				rowStart = 1;
-				rowEnd = rowStart + rowDiff;
-			}
-			
-			if (rowEnd > rowTotal) rowEnd = rowTotal;
-			
-			// #endregion
-			
-			// access database and get rows using search criteria
-			List<Monitoring> rows = Monitoring.getRowsReceiving(conn, filterType, filterFrom, rowStart, rowEnd);
-			
-			// remove original children
-			view.clear();
-			
-			if (rowTotal == 0) view.displayEmpty();
-			else view.display(rows, rowStart, rowEnd, rowTotal);
-			
-			receivingInitialized = true;
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-		}
-		finally
-		{
-			if (conn != null) 
-				try
-				{
-					conn.close();
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
-		}
-	}
 	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
@@ -733,7 +662,11 @@ public class Program
 		
 		if (!dirMade)
 		{
-			MsgBox.show(shell, String.format("Unable to create folder in %s after %d tries.", dirFileServer, configuration.mkdirTries), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+			MsgBox.show(shell, 
+					String.format("Unable to create folder in %s after %d tries.", 
+							dirFileServer, 
+							configuration.mkdirTries), 
+							"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 			return;
 		}	
 		
@@ -748,7 +681,11 @@ public class Program
 			}
 			catch (IOException e)
 			{
-				MsgBox.show(shell, String.format("Unable to copy file \"%s\" to \"%s\".", sourceFile.getAbsolutePath(), targetFile.getAbsolutePath()), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+				MsgBox.show(shell, 
+						String.format("Unable to copy file \"%s\" to \"%s\".", 
+								sourceFile.getAbsolutePath(), 
+								targetFile.getAbsolutePath()), 
+								"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 				e.printStackTrace();
 				return;
 			}
@@ -826,6 +763,79 @@ public class Program
 		
 		return success;
 	}
+	
+	public static void refreshReceivingTab(ReceivingComposite view, boolean forced)
+	{
+		if (receivingInitialized && !forced) return;
+		
+		Connection conn = null;
+		
+		try
+		{
+			// get filter criteria
+			String filterType = view.getFilterType();
+			String filterFrom = view.getFilterFrom();
+			
+			// get total row size from filter
+			String connString = configuration.getSqliteConnectionString();
+			conn = DriverManager.getConnection(connString);
+			int rowTotal = Monitoring.queryRowsReceiving(conn, filterType, filterFrom);
+			
+			// get pagination
+			int rowStart = view.getRowStart();
+			int rowEnd = view.getRowEnd();
+			
+			// #region clean pagination data 
+			
+			// switch if unordered
+			if (rowStart > rowEnd) 
+			{
+				int temp = rowEnd;
+				rowEnd = rowStart;
+				rowStart = temp;
+			}
+			
+			int rowDiff = rowEnd - rowStart;
+			
+			if (rowStart > rowTotal) 
+			{
+				rowStart = 1;
+				rowEnd = rowStart + rowDiff;
+			}
+			
+			if (rowEnd > rowTotal) rowEnd = rowTotal;
+			
+			// #endregion
+			
+			// access database and get rows using search criteria
+			List<Monitoring> rows = Monitoring.getRowsReceiving(conn, filterType, filterFrom, rowStart, rowEnd);
+			
+			// remove original children
+			view.clear();
+			
+			if (rowTotal == 0) view.displayEmpty();
+			else view.display(rows, rowStart, rowEnd, rowTotal);
+			
+			receivingInitialized = true;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		finally
+		{
+			if (conn != null) 
+				try
+				{
+					conn.close();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+		}
+	}
 
 	public static void updateReceiving(Shell shell, TableItem tableItem, int id)
 	{
@@ -848,7 +858,7 @@ public class Program
 			
 			if (item != null)
 			{
-				ReceivingDialog edit = new ReceivingDialog(shell, SWT.APPLICATION_MODAL);
+				ReceivingDialog edit = new ReceivingDialog(shell, SWT.NONE);
 				
 				edit.setItem(item);
 				if (edit.open())
@@ -884,7 +894,7 @@ public class Program
 			}
 			else
 			{
-				// TODO Handle when item is null
+				throw new NullPointerException("Monitoring.getItem(Connection, int) returned null");
 			}
 		}
 		catch (Exception e)
@@ -968,9 +978,76 @@ public class Program
 		}
 	}
 
-	public static void updateAssignment(Shell shell, TableItem item, int id)
+	public static void updateAssignment(Shell shell, TableItem tableItem, int id)
 	{
-		// TODO Auto-generated method stub
-		System.out.println("Program.updateAssignment id := " + id);
+		try
+		{
+			Connection conn = null;
+			Monitoring item = null;
+			
+			try
+			{
+				String connString = configuration.getSqliteConnectionString();
+				conn = DriverManager.getConnection(connString);
+				
+				item = Monitoring.getItem(conn, id);
+			}
+			finally
+			{
+				if (conn != null) conn.close();
+			}
+			
+			if (item != null)
+			{
+				AssignmentDialog edit = new AssignmentDialog(shell, SWT.NONE);
+				
+				edit.setItem(item);
+				if (edit.open())
+				{
+					List<Log> logs = edit.getChangeLog();
+					if (logs.size() <= 0) return;
+					
+					try
+					{
+						String connString = configuration.getSqliteConnectionString();
+						conn = DriverManager.getConnection(connString);
+						
+						conn.setAutoCommit(false);
+						
+						Monitoring.update(conn, logs);
+						Log.append(conn, logs, Program.USER, new Date(System.currentTimeMillis()));
+						
+						conn.commit();
+						
+						Monitoring row = Monitoring.getItem(conn, id);
+						AssignmentComposite.setText(tableItem, row);
+					}
+					catch (Exception e)
+					{
+						conn.rollback();
+						throw e;
+					}
+					finally
+					{
+						if (conn != null) conn.close(); 
+					}
+				}
+			}
+			else
+			{
+				throw new NullPointerException("Monitoring.getItem(Connection, int) returned null");
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+	}
+
+	public static void refreshProcessingTab(ProcessingComposite view, boolean forced)
+	{
+		// TODO Implement
+		System.out.println("Program.refreshProcessingTab");
 	}
 }

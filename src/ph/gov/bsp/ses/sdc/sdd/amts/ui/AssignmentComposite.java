@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
@@ -31,15 +33,16 @@ import org.eclipse.swt.widgets.Combo;
 
 public class AssignmentComposite extends Composite
 {
-	private static final String[] statusSelection = new String[] {"ALL", "NEW", "APPROVED", "DISAPPROVED", "CANCELLED"};
+	private static final String[] statusSelection = new String[] { "ALL", "NEW", "APPROVED", "DISALLOWED", "CANCELLED" };
 	private PaginationComposite xcmpPagination;
 	private Shell parentShell;
 	private AssignmentComposite self;
+	private Button btnRefresh;
+	private Combo cbxStatus;
 	private Text txtType;
 	private Text txtFrom;
 	private Table table;
-	private Combo txtStatus;
-
+	
 	/**
 	 * Create the composite.
 	 * @param parent
@@ -74,13 +77,16 @@ public class AssignmentComposite extends Composite
 		btnNewEntry.setText("New Entry");
 		btnNewEntry.setVisible(false); // Helps alignment with Refresh button
 		
-		Button btnRefresh = new Button(this, SWT.NONE);
-		btnRefresh.addSelectionListener(new SelectionAdapter() {
+		btnRefresh = new Button(this, SWT.NONE);
+		btnRefresh.addSelectionListener(new SelectionAdapter()
+		{
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(SelectionEvent e)
+			{
 				Program.refreshAssignmentTab(self, true);
 			}
 		});
+		
 		FormData fd_btnRefresh = new FormData();
 		fd_btnRefresh.top = new FormAttachment(btnNewEntry, 1);
 		fd_btnRefresh.right = new FormAttachment(btnNewEntry, 0, SWT.RIGHT);
@@ -101,10 +107,18 @@ public class AssignmentComposite extends Composite
 		lblStatus.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		lblStatus.setText("Status");
 		
-		txtStatus = new Combo(grpFilter, SWT.READ_ONLY);
-		txtStatus.setItems(statusSelection);
-		txtStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		txtStatus.select(0);
+		cbxStatus = new Combo(grpFilter, SWT.READ_ONLY);
+		cbxStatus.setItems(statusSelection);
+		cbxStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		cbxStatus.select(1);
+		cbxStatus.addSelectionListener(new SelectionAdapter()
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				Program.refreshAssignmentTab(self, true);
+			}
+		});
 		
 		Label lblType = new Label(grpFilter, SWT.NONE);
 		lblType.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -112,6 +126,18 @@ public class AssignmentComposite extends Composite
 		
 		txtType = new Text(grpFilter, SWT.BORDER);
 		txtType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		txtType.addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if (e.character == SWT.CR)
+				{
+					Program.refreshAssignmentTab(self, true);
+					btnRefresh.setFocus();
+				}
+			}
+		});
 		
 		Label lblFrom = new Label(grpFilter, SWT.NONE);
 		lblFrom.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -119,6 +145,18 @@ public class AssignmentComposite extends Composite
 		
 		txtFrom = new Text(grpFilter, SWT.BORDER);
 		txtFrom.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		txtFrom.addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if (e.character == SWT.CR)
+				{
+					Program.refreshAssignmentTab(self, true);
+					btnRefresh.setFocus();
+				}
+			}
+		});
 		
 		table = new Table(this, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION);
 		FormData fd_table = new FormData();
@@ -139,7 +177,7 @@ public class AssignmentComposite extends Composite
 					
 					if (item.getChecked())
 					{
-						getDisplay().asyncExec(new Runnable()
+						getDisplay().syncExec(new Runnable()
 						{
 							@Override
 							public void run()
@@ -147,6 +185,7 @@ public class AssignmentComposite extends Composite
 								item.setChecked(false);
 							}
 						});
+						
 						String textId = item.getText();
 						int id = Integer.parseInt(textId);
 						
@@ -207,12 +246,12 @@ public class AssignmentComposite extends Composite
 		}
 		
 		if (parent == null) throw new NullPointerException("Composite does not have a parent.");
-		this.parentShell = (Shell) parent;
+		this.parentShell = (Shell)parent;
 	}
 	
 	public void display(final List<Monitoring> rows, final int rowStart, final int rowEnd, final int rowTotal)
 	{
-		getDisplay().asyncExec(new Runnable()
+		getDisplay().syncExec(new Runnable()
 		{
 			@Override
 			public void run()
@@ -223,7 +262,7 @@ public class AssignmentComposite extends Composite
 		
 		this.xcmpPagination.display(rowStart, rowEnd, rowTotal);
 	}
-
+	
 	protected void displayAsync(List<Monitoring> rows)
 	{
 		this.table.removeAll();
@@ -234,10 +273,10 @@ public class AssignmentComposite extends Composite
 		for (Monitoring row : rows)
 		{
 			item = new TableItem(table, SWT.NONE);
-			setText(item, row);			
+			setText(item, row);
 		}
 	}
-
+	
 	public void clear()
 	{
 		this.table.removeAll();
@@ -247,22 +286,12 @@ public class AssignmentComposite extends Composite
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
-		item.setText(
-			Utilities.toArray(
-				String.format("%d", row.getID()), 
-				row.getStatus(), 
-				row.getRequestType(),
-				row.getRequestedBy(), 
-				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
-				row.getAssignedTo(),
-				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()),
-				row.getAssignedBy(),
-				row.getRemarks()));
+		item.setText(Utilities.toArray(String.format("%d", row.getID()), row.getStatus(), row.getRequestType(), row.getRequestedBy(), (row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), row.getAssignedTo(), (row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()), row.getAssignedBy(), row.getRemarks()));
 	}
-
+	
 	public void displayEmpty()
 	{
-		getDisplay().asyncExec(new Runnable()
+		getDisplay().syncExec(new Runnable()
 		{
 			@Override
 			public void run()
@@ -273,7 +302,7 @@ public class AssignmentComposite extends Composite
 		
 		this.xcmpPagination.displayEmpty();
 	}
-
+	
 	protected void displayEmptyAsync()
 	{
 		this.table.removeAll();
@@ -284,7 +313,7 @@ public class AssignmentComposite extends Composite
 		item = new TableItem(table, SWT.NONE);
 		item.setText("No data");
 	}
-
+	
 	public int getRowStart()
 	{
 		return this.xcmpPagination.getRowStart();
@@ -297,7 +326,7 @@ public class AssignmentComposite extends Composite
 	
 	public String getFilterStatus()
 	{
-		String text = this.txtStatus.getText(); 
+		String text = this.cbxStatus.getText();
 		if (text.equals("ALL")) return "";
 		else return text;
 	}

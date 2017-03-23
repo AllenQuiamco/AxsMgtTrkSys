@@ -95,7 +95,6 @@ public class PaginationComposite extends Composite
 			{
 				if (e.character == SWT.CR)
 				{
-					System.out.println("ENTER LOWER");
 					if (pageChangeAction != null) pageChangeAction.run();
 				}
 			}
@@ -136,7 +135,6 @@ public class PaginationComposite extends Composite
 			{
 				if (e.character == SWT.CR)
 				{
-					System.out.println("ENTER UPPER");
 					if (pageChangeAction != null) pageChangeAction.run();
 				}
 			}
@@ -181,6 +179,7 @@ public class PaginationComposite extends Composite
 		txtTotal.setBounds(212, 4, 60, 21);
 		
 		setEnabled(false);
+		setTabList(new Control[]{buttonFirst, buttonPrev, txtLower, txtUpper, txtTotal, buttonNext, buttonLast});
 	}
 	
 	@Override

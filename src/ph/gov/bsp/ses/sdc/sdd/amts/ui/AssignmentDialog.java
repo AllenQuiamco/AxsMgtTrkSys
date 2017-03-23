@@ -1,10 +1,16 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.sql.Date;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.eclipse.core.databinding.beans.PojoProperties;
+import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.Realm;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
+import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -27,19 +33,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import org.eclipse.core.databinding.DataBindingContext;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
-import org.eclipse.jface.databinding.swt.WidgetProperties;
-import org.eclipse.core.databinding.beans.PojoProperties;
 
 public class AssignmentDialog extends Dialog
 {
-	private DataBindingContext m_bindingContext;
-	private static final String[] statusSelection = new String[] {"APPROVED", "DISAPPROVED", "CANCELLED"};
+	private static final String[] statusSelection = new String[] { "APPROVED", "DISAPPROVED", "CANCELLED" };
 	
 	private Monitoring item;
 	private Monitoring itemEditable;
@@ -57,9 +58,9 @@ public class AssignmentDialog extends Dialog
 	private Text txtAssignTo;
 	private Label lblAssignTo;
 	private Text txtRemarks;
-	private Hashtable<String, Color> defaultColors = new Hashtable<String, Color>();
-
 	private Combo cbxStatus;
+	private Label lblStatusAsterisk;
+	private Hashtable<String, Color> defaultColors = new Hashtable<String, Color>();
 	
 	public static void main(String[] args)
 	{
@@ -99,7 +100,7 @@ public class AssignmentDialog extends Dialog
 	 * Open the dialog.
 	 * @return the result
 	 */
-	public Object open()
+	public boolean open()
 	{
 		createContents();
 		shell.open();
@@ -121,7 +122,7 @@ public class AssignmentDialog extends Dialog
 	private void createContents()
 	{
 		shell = new Shell(getParent(), SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
-		shell.setImage(SWTResourceManager.getImage(ReceivingDialog.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
+		shell.setImage(SWTResourceManager.getImage(AssignmentDialog.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
 		shell.setMinimumSize(new Point(450, 326));
 		shell.setSize(450, 326);
 		shell.setText("Assignment Details");
@@ -135,9 +136,11 @@ public class AssignmentDialog extends Dialog
 		cmpSave.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
 		btnSave = new Button(cmpSave, SWT.NONE);
-		btnSave.addSelectionListener(new SelectionAdapter() {
+		btnSave.addSelectionListener(new SelectionAdapter()
+		{
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(SelectionEvent e)
+			{
 				result = true;
 				shell.close();
 			}
@@ -251,14 +254,38 @@ public class AssignmentDialog extends Dialog
 		fd_cbxStatus.left = new FormAttachment(txtId, 0, SWT.LEFT);
 		cbxStatus.setLayoutData(fd_cbxStatus);
 		cbxStatus.addModifyListener(new ModifyListener()
-		{	
+		{
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				System.out.println("selectionIndex " + cbxStatus.getSelectionIndex());
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getStatus(), itemEditable.getStatus()))
+						{
+							lblStatusAsterisk.setText("");
+							txtAssignTo.setText(item.getAssignedTo());
+						}
+						else
+						{
+							lblStatusAsterisk.setText("*");
+						}
+						
+						if (Utilities.equals(itemEditable.getStatus(), "APPROVED"))
+						{
+							txtAssignTo.setEnabled(true);
+						}
+						else 
+						{
+							txtAssignTo.setText("");
+							txtAssignTo.setEnabled(false);
+						}
+					}
+				});
 			}
 		});
-		// TODO ModifyListener for property change
 		
 		Label lblStatus = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblStatus = new FormData();
@@ -267,6 +294,13 @@ public class AssignmentDialog extends Dialog
 		lblStatus.setLayoutData(fd_lblStatus);
 		lblStatus.setText("Status");
 		
+		lblStatusAsterisk = new Label(cmpDetails, SWT.NONE);
+		FormData fd_lblStatusAsterisk = new FormData();
+		fd_lblStatusAsterisk.top = new FormAttachment(0, 138);
+		fd_lblStatusAsterisk.left = new FormAttachment(cbxStatus, 2);
+		lblStatusAsterisk.setLayoutData(fd_lblStatusAsterisk);
+		lblStatusAsterisk.setText("  ");
+		
 		txtAssignTo = new Text(cmpDetails, SWT.BORDER);
 		txtAssignTo.setText("Assign to");
 		FormData fd_txtAssignTo = new FormData();
@@ -274,6 +308,28 @@ public class AssignmentDialog extends Dialog
 		fd_txtAssignTo.left = new FormAttachment(0, 74);
 		fd_txtAssignTo.right = new FormAttachment(100);
 		txtAssignTo.setLayoutData(fd_txtAssignTo);
+		this.defaultColors.put("txtAssignTo.background", txtAssignTo.getBackground());
+		txtAssignTo.addModifyListener(new ModifyListener()
+		{
+			public void modifyText(ModifyEvent e)
+			{
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo(), true))
+						{
+							txtAssignTo.setBackground(getDefaultColor("txtAssignedTo.background"));
+						}
+						else
+						{
+							txtAssignTo.setBackground(getColor_BG_CHANGED_SETTING());
+						}
+					}
+				});
+			}
+		});
 		
 		lblAssignTo = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblAssignTo = new FormData();
@@ -281,8 +337,6 @@ public class AssignmentDialog extends Dialog
 		fd_lblAssignTo.right = new FormAttachment(txtAssignTo, -4);
 		lblAssignTo.setLayoutData(fd_lblAssignTo);
 		lblAssignTo.setText("Assign to");
-		// TODO Behavior when approved
-		// TODO ModifyListener for property change
 		
 		Label lblRemarks = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblRemarks = new FormData();
@@ -313,7 +367,7 @@ public class AssignmentDialog extends Dialog
 						{
 							txtRemarks.setBackground(getDefaultColor("txtRemarks.background"));
 						}
-						else 
+						else
 						{
 							txtRemarks.setBackground(getColor_BG_CHANGED_SETTING());
 						}
@@ -321,83 +375,12 @@ public class AssignmentDialog extends Dialog
 				});
 			}
 		});
-		m_bindingContext = initDataBindings();
-	}
-	
-	public Monitoring getItem()
-	{
-		return item;
-	}
-
-	public void setItem(Monitoring item)
-	{
-		this.item = item;
-		this.itemEditable = item.clone();
-	}
-
-	public Monitoring getEditedItem()
-	{
-		return this.itemEditable;
-	}
-	
-	public List<Log> getChangeLog()
-	{
-		// TODO AssignmentDialog.getChangeLog()
-		throw new NotImplementedException();
 		
-//		List<Log> logs = new LinkedList<Log>();
-//		
-//		Log log = null;
-//		
-//		if (!Utilities.equals(item.getRequestType(), itemEditable.getRequestType()))
-//		{
-//			log = new Log();
-//			log.setAction("update");
-//			log.setTableName("MONITORING");
-//			log.setFieldName("RequestType");
-//			log.setRowId(item.getID());
-//			log.setOldValue(item.getRequestType());
-//			log.setNewValue(itemEditable.getRequestType());
-//			logs.add(log);
-//		}
-//		
-//		if (!Utilities.equals(item.getRequestedBy(), itemEditable.getRequestedBy()))
-//		{
-//			log = new Log();
-//			log.setAction("update");
-//			log.setTableName("MONITORING");
-//			log.setFieldName("RequestedBy");
-//			log.setRowId(item.getID());
-//			log.setOldValue(item.getRequestedBy());
-//			log.setNewValue(itemEditable.getRequestedBy());
-//			logs.add(log);
-//		}
-//		
-//		if (!Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
-//		{
-//			log = new Log();
-//			log.setAction("update");
-//			log.setTableName("MONITORING");
-//			log.setFieldName("Remarks");
-//			log.setRowId(item.getID());
-//			log.setOldValue(item.getRemarks());
-//			log.setNewValue(itemEditable.getRemarks());
-//			logs.add(log);
-//		}
-//		
-//		return logs;
+		initDataBindings();
 	}
 	
-	private Color getColor_BG_CHANGED_SETTING()
+	protected DataBindingContext initDataBindings()
 	{
-		return new Color(this.getParent().getDisplay(), 255, 255, 225);
-	}
-	
-	private Color getDefaultColor(String element)
-	{
-		return this.defaultColors.get(element);
-	}
-	protected DataBindingContext initDataBindings() {
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
 		IObservableValue observeTextTxtIdObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtId);
@@ -437,4 +420,95 @@ public class AssignmentDialog extends Dialog
 		//
 		return bindingContext;
 	}
+	
+	public Monitoring getItem()
+	{
+		return item;
+	}
+	
+	public void setItem(Monitoring item)
+	{
+		this.item = item;
+		this.itemEditable = item.clone();
+	}
+	
+	public Monitoring getEditedItem()
+	{
+		return this.itemEditable;
+	}
+	
+	public List<Log> getChangeLog()
+	{
+		List<Log> logs = new LinkedList<Log>();
+		
+		Log log = null;
+		
+		if (!Utilities.equals(item.getStatus(), itemEditable.getStatus()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("Status");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getStatus());
+			log.setNewValue(itemEditable.getStatus());
+			logs.add(log);
+		}
+		
+		if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("AssignedTo");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getAssignedTo());
+			log.setNewValue(itemEditable.getAssignedTo());
+			logs.add(log);
+			
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("AssignedBy");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getAssignedTo());
+			log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
+			logs.add(log);
+			
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("AssignedOn");
+			log.setRowId(item.getID());
+			log.setOldValue(Monitoring.formatDate(item.getAssignedOn()));
+			log.setNewValue(Monitoring.formatDate(new Date(System.currentTimeMillis())));
+			logs.add(log);
+		}
+		
+		if (!Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("Remarks");
+			log.setRowId(item.getID());
+			log.setOldValue(item.getRemarks());
+			log.setNewValue(itemEditable.getRemarks());
+			logs.add(log);
+		}
+		
+		return logs;
+	}
+	
+	private Color getColor_BG_CHANGED_SETTING()
+	{
+		return new Color(this.getParent().getDisplay(), 255, 255, 225);
+	}
+	
+	private Color getDefaultColor(String element)
+	{
+		return this.defaultColors.get(element);
+	}
+	
+	
 }

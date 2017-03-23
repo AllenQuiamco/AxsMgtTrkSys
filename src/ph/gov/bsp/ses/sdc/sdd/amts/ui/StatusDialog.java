@@ -149,7 +149,6 @@ public class StatusDialog extends Dialog
 		// thread to wait for the StatusThread to finish
 		this.waitThread = new Thread()
 		{
-			
 			@Override
 			public void run()
 			{
@@ -206,7 +205,6 @@ public class StatusDialog extends Dialog
 		if (display == null || display.isDisposed()) return;
 		display.asyncExec(new Runnable()
 		{
-			
 			@Override
 			public void run()
 			{
@@ -220,7 +218,6 @@ public class StatusDialog extends Dialog
 		if (display == null || display.isDisposed()) return;
 		display.asyncExec(new Runnable()
 		{
-			
 			@Override
 			public void run()
 			{
