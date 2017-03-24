@@ -1,18 +1,27 @@
 package ph.gov.bsp.ses.sdc.sdd.amts;
 
-import java.io.*;
-import java.sql.*;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Date;
-import java.util.*;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.jface.databinding.swt.SWTObservables;
-import org.eclipse.swt.*;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TableItem;
+import org.sqlite.SQLiteConfig;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
@@ -31,11 +40,14 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Program
 {
-	public static String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
+	private static final String APP_NAME = "amts";
+	private static final String SETTINGS_FILE_NAME = "settings.ini";
+	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
 	
-	static Configuration configuration = null;
+	private static Settings settings = null;
 	private static boolean receivingInitialized;
 	private static boolean assignmentInitialized;
+	private static boolean processingInitialized;
 	
 	static void testSQLITE()
 	{
@@ -96,8 +108,7 @@ public class Program
 		
 		try
 		{
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
+			conn = getConnection();
 			conn.setAutoCommit(false);
 			
 			List<Monitoring> samples = Monitoring.getSamples(50);
@@ -118,79 +129,70 @@ public class Program
 		
 		System.exit(ExitCode.HARD_ABORT);
 	}
+	
+	private static File getSettingsFile()
+	{
+		String filedir = System.getenv("APPDATA");
+		if (!new File(filedir).exists()) filedir = System.getenv("USERPROFILE");
+		else if (!new File(filedir).exists()) filedir = System.getenv("USER_HOME");
+		else if (!new File(filedir).exists()) filedir = "";
 		
+		if (!filedir.equals(""))
+		{ // load from user directory
+			File file = new File(filedir, APP_NAME);
+			if (!file.exists()) file.mkdir();
+			filedir = file.getAbsolutePath();
+		}
+		
+		File file = new File(filedir, SETTINGS_FILE_NAME);
+		return file;
+	}
+	
+	private static Settings getSettings()
+	{
+		return (settings == null) ? (settings = Settings.get(getSettingsFile())) : settings;
+	}
+	
+	public static String getSetting(String setting)
+	{
+		return getSettings().get(setting);
+	}
+	
+	public static void setSetting(String setting, String value)
+	{
+		getSettings().set(setting, value);
+	}
+	
+	public static Connection getConnection() throws SQLException
+	{
+		return getConnection(getSetting("path.sqlitedb"));
+	}
+	
+	public static Connection getConnection(String sqliteFilePath) throws SQLException
+	{
+		String connString = String.format("jdbc:sqlite:%s", sqliteFilePath.replace("\\", "/"));
+		
+		SQLiteConfig config = new SQLiteConfig();
+		config.setBusyTimeout(getSetting("data.busytimeoutmsecs"));
+		
+		return DriverManager.getConnection(connString, config.toProperties());
+	}
+	
 	public static void main(String[] args)
 	{
 		try
 		{	
-			
-			// #region Read configuration file
-			
-			File file = Configuration.getFile();
-			if (!file.exists())
-			{
-				configuration = new Configuration();
-				try
-				{
-					Configuration.write(file, configuration);
-				}
-				catch (IOException ioe)
-				{
-					// write failed
-					ioe.printStackTrace();
-					if (!MsgBox.show("Unable to write configuration file. Continue?", "Error", MsgBoxButtons.YES_NO, MsgBoxIcon.WARNING).isYes())
-					{
-						throw new UserAbortException("Unable to write configuration file. User aborted program.");
-					}
-				}
-			}
-			else
-			{
-				try
-				{
-					configuration = Configuration.read(file);
-				}
-				catch (IOException ioe)
-				{
-					// read failed
-					ioe.printStackTrace();
-					if (!MsgBox.show("Unable to read configuration file. Continue?", "Error", MsgBoxButtons.YES_NO, MsgBoxIcon.WARNING).isYes())
-					{
-						throw new UserAbortException("Unable to read configuration file. User aborted program.");
-					}
-				}
-				catch (ClassNotFoundException cnfe)
-				{
-					// read failed, try to rewrite
-					cnfe.printStackTrace();
-					configuration = new Configuration();
-					try
-					{
-						Configuration.write(file, configuration);
-					}
-					catch (IOException ioe2)
-					{
-						// write failed
-						ioe2.printStackTrace();
-						if (!MsgBox.show("Unable to rewrite configuration file. Continue?", "Error", MsgBoxButtons.YES_NO, MsgBoxIcon.WARNING).isYes())
-						{
-							throw new UserAbortException("Unable to rewrite configuration file. User aborted program.");
-						}
-					}
-				}
-				
-			}
-			
-			// #endregion
-			
-			//testLoadSamples();
+//			Date date = new Date(System.currentTimeMillis());
+//			System.out.println(Monitoring.morphDate(date));
+//			testLoadSamples();
+//			System.exit(ExitCode.HARD_ABORT);
 						
 			final MainWindow mw = new MainWindow();
 			
 			// load settings
-			mw.getTextSqliteDb().setText(configuration.SqliteDbFilePath);
-			mw.getTextFileServer().setText(configuration.FileServerPath);
-			mw.getTextLocalCopy().setText(configuration.LocalCopyPath);
+			mw.getTextSqliteDb().setText(getSetting("path.sqlitedb"));
+			mw.getTextFileServer().setText(getSetting("path.fileserver"));
+			mw.getTextLocalCopy().setText(getSetting("path.localcopy"));
 			
 			// load about page
 			mw.setInfoUrl(Utilities.getAbsolutePath("ABOUT.html"));
@@ -203,31 +205,13 @@ public class Program
 				{
 					mw.open();
 				}
-			});
-			
-		}
-		catch (UserAbortException uae)
-		{
-			uae.printStackTrace();
-			System.exit(ExitCode.USER_ABORTED);
+			});	
 		}
 		catch (Throwable t)
 		{
 			t.printStackTrace();
 			System.exit(ExitCode.UNHANDLED_ERROR);
 		}
-	}
-	
-	public static Connection getConnection()
-	{
-		// TODO Wrap Connection instantiators to enable properties  
-		// see https://bitbucket.org/xerial/sqlite-jdbc/issues/27/allow-user-to-specify-busy-timeout-when
-		
-//		Properties props = new Properties ();
-//		props. put ("busy_timeout", "33000");
-//		Conection con = DriverManager.getConnection("jdbc:sqlite:", props);
-		
-		throw new NotImplementedException();
 	}
 	
 	// #region UI - Settings
@@ -309,7 +293,7 @@ public class Program
 			public void run()
 			{
 				String setting = main.getTextSqliteDb().getText();
-				if (setting.equals(configuration.SqliteDbFilePath))
+				if (setting.equals(getSetting("path.sqlitedb")))
 				{
 					if (main.getTextSqliteDb().getBackground().equals(main.getColor_BG_VALID_SETTING()))
 					{
@@ -339,7 +323,7 @@ public class Program
 			public void run()
 			{
 				String setting = main.getTextFileServer().getText();
-				if (setting.equals(configuration.FileServerPath))
+				if (setting.equals(getSetting("path.fileserver")))
 				{
 					if (main.getTextFileServer().getBackground().equals(main.getColor_BG_VALID_SETTING()))
 					{
@@ -369,7 +353,7 @@ public class Program
 			public void run()
 			{
 				String setting = main.getTextLocalCopy().getText();
-				if (setting.equals(configuration.LocalCopyPath))
+				if (setting.equals(getSetting("path.localcopy")))
 				{
 					if (main.getTextLocalCopy().getBackground().equals(main.getColor_BG_VALID_SETTING()))
 					{
@@ -390,7 +374,6 @@ public class Program
 
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
-	 * <p>WARNING: This method asynchronously modifies a UI element.</p>
 	 */
 	public static void setSqliteDb(final MainWindow main, SelectionEvent buttonSelectedEvent)
 	{
@@ -422,8 +405,7 @@ public class Program
 			{
 				try
 				{
-					String connString = Configuration.getSqliteConnectionString(setting);
-					conn = DriverManager.getConnection(connString);
+					conn = getConnection(setting);
 					
 					// validateConnection() must catch its exceptions, but print
 					// their stack traces for debugging
@@ -457,17 +439,7 @@ public class Program
 					}
 				});
 				
-				try
-				{
-					configuration.SqliteDbFilePath = setting;
-					Configuration.write(Configuration.getFile(), configuration);
-				}
-				catch (IOException e)
-				{
-					// failed to write configuration
-					e.printStackTrace();
-					MsgBox.show(main.getShell(), "An error occurred while writing the configuration file. Your new setting may only be in effect until the program closes.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-				}
+				setSetting("path.sqlitedb", setting);
 			}
 			else
 			{
@@ -503,7 +475,6 @@ public class Program
 	
 	/**
 	 * <p>WARNING: This method spawns a UI element.</p>
-	 * <p>WARNING: This method asynchronously modifies a UI element.</p>
 	 */
 	public static void setFileServer(final MainWindow main, SelectionEvent buttonSelectedEvent)
 	{
@@ -537,17 +508,7 @@ public class Program
 				}
 			});
 			
-			try
-			{
-				configuration.FileServerPath = setting;
-				Configuration.write(Configuration.getFile(), configuration);
-			}
-			catch (IOException e)
-			{
-				// failed to write configuration
-				e.printStackTrace();
-				MsgBox.show(main.getShell(), "An error occurred while writing the configuration file. Your new setting may only be in effect until the program closes.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-			}
+			setSetting("path.fileserver", setting);
 		}
 		else
 		{ 
@@ -601,17 +562,7 @@ public class Program
 				}
 			});
 			
-			try
-			{
-				configuration.LocalCopyPath = setting;
-				Configuration.write(Configuration.getFile(), configuration);
-			}
-			catch (IOException e)
-			{
-				// failed to write configuration
-				e.printStackTrace();
-				MsgBox.show(main.getShell(), "An error occurred while writing the configuration file. Your new setting may only be in effect until the program closes.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-			}
+			setSetting("path.localcopy", setting);
 		}
 		else
 		{
@@ -648,11 +599,11 @@ public class Program
 		
 		// try to create at file server
 		boolean dirMade = false;
-		File dirFileServer = new File(configuration.FileServerPath);
+		File dirFileServer = new File(getSetting("path.fileserver"));
 		File targetBase = null;
 		long receivedOn = 0;
 		String folder = null;
-		for (int i = 1; i <= configuration.mkdirTries; i++)
+		for (int i = 1; i <= Integer.parseInt(getSetting("data.mkdirtries")); i++)
 		{
 			receivedOn = System.currentTimeMillis();
 			folder = "" + receivedOn;
@@ -665,7 +616,7 @@ public class Program
 			MsgBox.show(shell, 
 					String.format("Unable to create folder in %s after %d tries.", 
 							dirFileServer, 
-							configuration.mkdirTries), 
+							getSetting("path.mkdirtries")), 
 							"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 			return;
 		}	
@@ -720,8 +671,7 @@ public class Program
 		{
 			try
 			{
-				String connString = configuration.getSqliteConnectionString();
-				conn = DriverManager.getConnection(connString);
+				conn = getConnection();
 				conn.setAutoCommit(false);
 				
 				Monitoring.addNew(conn, item);
@@ -777,8 +727,7 @@ public class Program
 			String filterFrom = view.getFilterFrom();
 			
 			// get total row size from filter
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
+			conn = getConnection();
 			int rowTotal = Monitoring.queryRowsReceiving(conn, filterType, filterFrom);
 			
 			// get pagination
@@ -846,8 +795,7 @@ public class Program
 			
 			try
 			{
-				String connString = configuration.getSqliteConnectionString();
-				conn = DriverManager.getConnection(connString);
+				conn = getConnection();
 				
 				item = Monitoring.getItem(conn, id);
 			}
@@ -868,9 +816,7 @@ public class Program
 					
 					try
 					{
-						String connString = configuration.getSqliteConnectionString();
-						conn = DriverManager.getConnection(connString);
-						
+						conn = getConnection();						
 						conn.setAutoCommit(false);
 						
 						Monitoring.update(conn, logs);
@@ -918,8 +864,7 @@ public class Program
 			String filterFrom = view.getFilterFrom();
 			
 			// get total row size from filter
-			String connString = configuration.getSqliteConnectionString();
-			conn = DriverManager.getConnection(connString);
+			conn = getConnection();
 			int rowTotal = Monitoring.queryRowsAssignment(conn, filterStatus, filterType, filterFrom);
 			
 			// get pagination
@@ -987,8 +932,7 @@ public class Program
 			
 			try
 			{
-				String connString = configuration.getSqliteConnectionString();
-				conn = DriverManager.getConnection(connString);
+				conn = getConnection();
 				
 				item = Monitoring.getItem(conn, id);
 			}
@@ -1009,9 +953,7 @@ public class Program
 					
 					try
 					{
-						String connString = configuration.getSqliteConnectionString();
-						conn = DriverManager.getConnection(connString);
-						
+						conn = getConnection();
 						conn.setAutoCommit(false);
 						
 						Monitoring.update(conn, logs);
@@ -1047,7 +989,80 @@ public class Program
 
 	public static void refreshProcessingTab(ProcessingComposite view, boolean forced)
 	{
-		// TODO Implement
-		System.out.println("Program.refreshProcessingTab");
+		if (processingInitialized && !forced) return;
+		
+		Connection conn = null;
+		
+		try
+		{
+			// get filter criteria
+			String filterStatus = view.getFilterStatus();
+			String filterType = view.getFilterType();
+			String filterAssignedTo = view.getFilterAssignedTo();
+			
+			// get total row size from filter
+			conn = getConnection();
+			int rowTotal = Monitoring.queryRowsProcessing(conn, filterStatus, filterType, filterAssignedTo);
+			
+			// get pagination
+			int rowStart = view.getRowStart();
+			int rowEnd = view.getRowEnd();
+			
+			// #region clean pagination data 
+			
+			// switch if unordered
+			if (rowStart > rowEnd) 
+			{
+				int temp = rowEnd;
+				rowEnd = rowStart;
+				rowStart = temp;
+			}
+			
+			int rowDiff = rowEnd - rowStart;
+			
+			if (rowStart > rowTotal) 
+			{
+				rowStart = 1;
+				rowEnd = rowStart + rowDiff;
+			}
+			
+			if (rowEnd > rowTotal) rowEnd = rowTotal;
+			
+			// #endregion
+			
+			// access database and get rows using search criteria
+			List<Monitoring> rows = Monitoring.getRowsProcessing(conn, filterStatus, filterType, filterAssignedTo, rowStart, rowEnd);
+			
+			// remove original children
+			view.clear();
+			
+			if (rowTotal == 0) view.displayEmpty();
+			else view.display(rows, rowStart, rowEnd, rowTotal);
+			
+			processingInitialized = true;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			MsgBox.show("Database connection failed.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		finally
+		{
+			if (conn != null) 
+				try
+				{
+					conn.close();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+		}
+	}
+	
+	public static void updateProcessing(Shell shell, TableItem tableItem, int id)
+	{
+		// TODO implement
+		throw new NotImplementedException();
 	}
 }

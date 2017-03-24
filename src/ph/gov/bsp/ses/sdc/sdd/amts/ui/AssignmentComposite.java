@@ -117,6 +117,7 @@ public class AssignmentComposite extends Composite
 			public void widgetSelected(SelectionEvent e)
 			{
 				Program.refreshAssignmentTab(self, true);
+				table.setFocus();
 			}
 		});
 		
@@ -286,7 +287,17 @@ public class AssignmentComposite extends Composite
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
-		item.setText(Utilities.toArray(String.format("%d", row.getID()), row.getStatus(), row.getRequestType(), row.getRequestedBy(), (row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), row.getAssignedTo(), (row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()), row.getAssignedBy(), row.getRemarks()));
+		item.setText(
+			Utilities.toArray(
+				String.format("%d", row.getID()), 
+				row.getStatus(), 
+				row.getRequestType(), 
+				row.getRequestedBy(), 
+				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+				row.getAssignedTo(), 
+				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()), 
+				row.getAssignedBy(), 
+				row.getRemarks()));
 	}
 	
 	public void displayEmpty()

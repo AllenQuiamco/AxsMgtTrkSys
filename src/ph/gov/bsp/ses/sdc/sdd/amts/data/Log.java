@@ -19,12 +19,12 @@ public class Log
 	private int id = -1;
 	private String userId;
 	private String action;
-	private String effectedOn;
+	private Long effectedOn;
 	private String tableName;
 	private String fieldName;
 	private int rowId = -1;
-	private String oldValue;
-	private String newValue;
+	private Object oldValue;
+	private Object newValue;
 	
 	public int getId()
 	{
@@ -63,7 +63,8 @@ public class Log
 	
 	public void setEffectedOn(Date effectedOn)
 	{
-		this.effectedOn = formatDate(effectedOn);
+		//this.effectedOn = formatDate(effectedOn);
+		this.effectedOn = morphDate(effectedOn);
 	}
 	
 	public String getTableName()
@@ -96,22 +97,22 @@ public class Log
 		this.rowId = rowId;
 	}
 	
-	public String getOldValue()
+	public Object getOldValue()
 	{
 		return oldValue;
 	}
 	
-	public void setOldValue(String oldValue)
+	public void setOldValue(Object oldValue)
 	{
 		this.oldValue = oldValue;
 	}
 	
-	public String getNewValue()
+	public Object getNewValue()
 	{
 		return newValue;
 	}
 	
-	public void setNewValue(String newValue)
+	public void setNewValue(Object newValue)
 	{
 		this.newValue = newValue;
 	}
@@ -132,10 +133,42 @@ public class Log
 		return retobj;
 	}
 	
+	public static Date getDate(Long value) // yyyyMMddHHmmss
+	{
+		if (value == null) return null;
+		
+		long year = value / 10000000000L;
+		value = value % 10000000000L;
+		
+		long month =  value / 100000000L;
+		value = value % 100000000L;
+		
+		long day = value / 1000000L;
+		value = value % 1000000L;
+		
+		long hour = value / 10000L;
+		value = value % 10000L;
+		
+		long mins = value / 100;
+		value = value % 100;
+		
+		long secs = value;
+		
+		return getDate(String.format("%d-%d-%d %d:%d:%d", year, month, day, hour, mins, secs));
+	}
+	
 	public static String formatDate(Date value)
 	{
 		if (value == null) return null;
 		return DATE_FORMATTER.format(value);
+	}
+	
+	public static Long morphDate(Date value)
+	{
+		if (value == null) return null;
+		String formattedDate = formatDate(value);
+		formattedDate = formattedDate.replace("-", "").replace(" ", "").replace(":", "");
+		return Long.parseLong(formattedDate);
 	}
 	
 	public static void append(Connection conn, Log item, String user, Date date) throws SQLException
@@ -153,12 +186,12 @@ public class Log
 			insert = conn.prepareStatement(insertNew);
 			insert.setString(1, item.userId);
 			insert.setString(2, item.action);
-			insert.setString(3, item.effectedOn);
+			insert.setLong(3, item.effectedOn);
 			insert.setString(4, item.tableName);
 			insert.setString(5, item.fieldName);
 			insert.setInt(6, item.rowId);
-			insert.setString(7, item.oldValue);
-			insert.setString(8, item.newValue);
+			insert.setObject(7, item.oldValue);
+			insert.setObject(8, item.newValue);
 			
 			int result = insert.executeUpdate();
 			if (result < 1) throw new SQLException("No rows were inserted.");

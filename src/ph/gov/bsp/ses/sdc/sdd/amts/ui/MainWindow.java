@@ -59,6 +59,7 @@ public class MainWindow
 
 	private ReceivingComposite xcmpReceiving;
 	private AssignmentComposite xcmpAssignment;
+	private ProcessingComposite xcmpProcessing;
 	
 	public MainWindow()
 	{
@@ -103,7 +104,10 @@ public class MainWindow
 			@Override
 			public void shellClosed(ShellEvent e)
 			{
-				//close(e);
+				System.out.println("MINIMIZED " + shell.getMinimized());
+				System.out.println("MAXIMIZED " + shell.getMaximized());
+				System.out.println("LOCATION " + shell.getLocation());
+				System.out.println("SIZE " + shell.getSize());
 				e.doit = true; // TODO Save window position information
 			}
 		});
@@ -118,8 +122,12 @@ public class MainWindow
 				{
 					case 1:
 						Program.refreshReceivingTab(xcmpReceiving, false);
+						break;
 					case 2:
 						Program.refreshAssignmentTab(xcmpAssignment, false);
+						break;
+					case 3:
+						Program.refreshProcessingTab(xcmpProcessing, false);
 						break;
 				}
 			}
@@ -230,8 +238,8 @@ public class MainWindow
 		TabItem tabProcessing = new TabItem(tabs, SWT.NONE);
 		tabProcessing.setText("Processing");
 		
-		Composite cmpProcessing = new Composite(tabs, SWT.NONE);
-		tabProcessing.setControl(cmpProcessing);
+		xcmpProcessing = new ProcessingComposite(tabs, SWT.NONE);
+		tabProcessing.setControl(xcmpProcessing);
 		
 		TabItem tabOutput = new TabItem(tabs, SWT.NONE);
 		tabOutput.setText("Output");

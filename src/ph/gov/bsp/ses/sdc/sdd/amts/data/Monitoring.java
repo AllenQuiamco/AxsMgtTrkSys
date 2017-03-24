@@ -19,7 +19,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
-	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessDetails`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
+	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
 	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 	
@@ -27,16 +27,15 @@ public class Monitoring implements Cloneable
 	private String folder;
 	private String requestType;
 	private String requestedBy;
-	private String receivedOn;
+	private Long receivedOn;
 	private String receivedBy;
 	private String status;
 	private String assignedBy;
 	private String assignedTo;
-	private String assignedOn;
-	private String processDetails;
+	private Long assignedOn;
 	private String processedBy;
-	private String processedOn;
-	private String resolvedOn;
+	private Long processedOn;
+	private Long resolvedOn;
 	private String remarks;
 	
 	@Override
@@ -54,7 +53,6 @@ public class Monitoring implements Cloneable
 		clone.assignedBy = this.assignedBy;
 		clone.assignedTo = this.assignedTo;
 		clone.assignedOn = this.assignedOn;
-		clone.processDetails = this.processDetails;
 		clone.processedBy = this.processedBy;
 		clone.processedOn = this.processedOn;
 		clone.resolvedOn = this.resolvedOn;
@@ -110,7 +108,8 @@ public class Monitoring implements Cloneable
 	
 	public void setReceivedOn(Date receivedOn)
 	{
-		this.receivedOn = formatDate(receivedOn);
+		//this.receivedOn = formatDate(receivedOn);
+		this.receivedOn = morphDate(receivedOn);
 	}
 
 	public String getReceivedBy()
@@ -160,17 +159,8 @@ public class Monitoring implements Cloneable
 
 	public void setAssignedOn(Date assignedOn)
 	{
-		this.assignedOn = formatDate(assignedOn);
-	}
-
-	public String getProcessDetails()
-	{
-		return processDetails;
-	}
-
-	public void setProcessDetails(String processDetails)
-	{
-		this.processDetails = processDetails;
+		//this.assignedOn = formatDate(assignedOn);
+		this.assignedOn = morphDate(assignedOn);
 	}
 
 	public String getProcessedBy()
@@ -190,7 +180,8 @@ public class Monitoring implements Cloneable
 
 	public void setProcessedOn(Date processedOn)
 	{
-		this.processedOn = formatDate(processedOn);
+		//this.processedOn = formatDate(processedOn);
+		this.processedOn = morphDate(processedOn);
 	}
 
 	public Date getResolvedOn()
@@ -200,7 +191,8 @@ public class Monitoring implements Cloneable
 
 	public void setResolvedOn(Date resolvedOn)
 	{
-		this.resolvedOn = formatDate(resolvedOn);
+		//this.resolvedOn = formatDate(resolvedOn);
+		this.resolvedOn = morphDate(resolvedOn);
 	}
 
 	public String getRemarks()
@@ -229,10 +221,42 @@ public class Monitoring implements Cloneable
 		return retobj;
 	}
 	
+	public static Date getDate(Long value) // yyyyMMddHHmmss
+	{
+		if (value == null) return null;
+		
+		long year = value / 10000000000L;
+		value = value % 10000000000L;
+		
+		long month =  value / 100000000L;
+		value = value % 100000000L;
+		
+		long day = value / 1000000L;
+		value = value % 1000000L;
+		
+		long hour = value / 10000L;
+		value = value % 10000L;
+		
+		long mins = value / 100;
+		value = value % 100;
+		
+		long secs = value;
+		
+		return getDate(String.format("%d-%d-%d %d:%d:%d", year, month, day, hour, mins, secs));
+	}
+	
 	public static String formatDate(Date value)
 	{
 		if (value == null) return null;
 		return DATE_FORMATTER.format(value);
+	}
+	
+	public static Long morphDate(Date value)
+	{
+		if (value == null) return null;
+		String formattedDate = formatDate(value);
+		formattedDate = formattedDate.replace("-", "").replace(" ", "").replace(":", "");
+		return Long.parseLong(formattedDate);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -257,7 +281,6 @@ public class Monitoring implements Cloneable
 			item.assignedBy = String.format("assignedBy%08x", random.nextInt());
 			item.assignedTo = String.format("assignedTo%08x", random.nextInt());
 			item.setAssignedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
-			item.processDetails = String.format("processDetails%08x", random.nextInt());
 			item.processedBy = String.format("processedBy%08x", random.nextInt());
 			item.setProcessedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.setResolvedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
@@ -420,7 +443,7 @@ public class Monitoring implements Cloneable
 			insert.setString(1, item.folder);
 			insert.setString(2, item.requestType);
 			insert.setString(3, item.requestedBy);
-			insert.setString(4, item.receivedOn);
+			insert.setLong(4, item.receivedOn);
 			insert.setString(5,  item.receivedBy);
 			insert.setString(6, item.status);
 			insert.setString(7, item.remarks);
@@ -472,7 +495,7 @@ public class Monitoring implements Cloneable
 			try
 			{
 				update = conn.prepareStatement(updateString);
-				update.setString(1, log.getNewValue());
+				update.setObject(1, log.getNewValue());
 				update.setInt(2, log.getRowId());
 				
 				int result = update.executeUpdate();
@@ -496,6 +519,20 @@ public class Monitoring implements Cloneable
 	public static List<Monitoring> getRowsAssignment(Connection conn, String filterStatus, String filterType, String filterFrom, int rowStart, int rowEnd) throws SQLException
 	{
 		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "RequestedBy", filterFrom);
+		
+		return getRows(conn, where, rowStart, rowEnd);
+	}
+
+	public static int queryRowsProcessing(Connection conn, String filterStatus, String filterType, String filterAssignedTo) throws SQLException
+	{
+		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "AssignedTo", filterAssignedTo);
+		
+		return queryRows(conn, where);
+	}
+
+	public static List<Monitoring> getRowsProcessing(Connection conn, String filterStatus, String filterType, String filterAssignedTo, int rowStart, int rowEnd) throws SQLException
+	{
+		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "AssignedTo", filterAssignedTo);
 		
 		return getRows(conn, where, rowStart, rowEnd);
 	}

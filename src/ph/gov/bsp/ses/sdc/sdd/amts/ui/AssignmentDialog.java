@@ -292,7 +292,7 @@ public class AssignmentDialog extends Dialog
 		fd_lblStatus.top = new FormAttachment(0, 138);
 		fd_lblStatus.right = new FormAttachment(cbxStatus, -4);
 		lblStatus.setLayoutData(fd_lblStatus);
-		lblStatus.setText("Status");
+		lblStatus.setText("Set Status");
 		
 		lblStatusAsterisk = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblStatusAsterisk = new FormData();
@@ -455,33 +455,49 @@ public class AssignmentDialog extends Dialog
 			logs.add(log);
 		}
 		
-		if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+		String status = itemEditable.getStatus();
+		
+		if (status.equals("APPROVED"))
+		{
+			if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+			{
+				log = new Log();
+				log.setAction("update");
+				log.setTableName("MONITORING");
+				log.setFieldName("AssignedTo");
+				log.setRowId(item.getID());
+				log.setOldValue(item.getAssignedTo());
+				log.setNewValue(itemEditable.getAssignedTo());
+				logs.add(log);
+				
+				log = new Log();
+				log.setAction("update");
+				log.setTableName("MONITORING");
+				log.setFieldName("AssignedBy");
+				log.setRowId(item.getID());
+				log.setOldValue(item.getAssignedTo());
+				log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
+				logs.add(log);
+				
+				log = new Log();
+				log.setAction("update");
+				log.setTableName("MONITORING");
+				log.setFieldName("AssignedOn");
+				log.setRowId(item.getID());
+				log.setOldValue(Monitoring.morphDate(item.getAssignedOn()));
+				log.setNewValue(Monitoring.morphDate(new Date(System.currentTimeMillis())));
+				logs.add(log);
+			}
+		}
+		else if (status.equals("DISAPPROVED") || status.equals("CANCELLED"))
 		{
 			log = new Log();
 			log.setAction("update");
 			log.setTableName("MONITORING");
-			log.setFieldName("AssignedTo");
+			log.setFieldName("ResolvedOn");
 			log.setRowId(item.getID());
-			log.setOldValue(item.getAssignedTo());
-			log.setNewValue(itemEditable.getAssignedTo());
-			logs.add(log);
-			
-			log = new Log();
-			log.setAction("update");
-			log.setTableName("MONITORING");
-			log.setFieldName("AssignedBy");
-			log.setRowId(item.getID());
-			log.setOldValue(item.getAssignedTo());
-			log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
-			logs.add(log);
-			
-			log = new Log();
-			log.setAction("update");
-			log.setTableName("MONITORING");
-			log.setFieldName("AssignedOn");
-			log.setRowId(item.getID());
-			log.setOldValue(Monitoring.formatDate(item.getAssignedOn()));
-			log.setNewValue(Monitoring.formatDate(new Date(System.currentTimeMillis())));
+			log.setOldValue(Monitoring.morphDate(item.getResolvedOn()));
+			log.setNewValue(Monitoring.morphDate(new Date(System.currentTimeMillis())));
 			logs.add(log);
 		}
 		

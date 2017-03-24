@@ -22,6 +22,7 @@ public class PaginationComposite extends Composite
 {
 	static final int DEFAULT_ROW_START = 1;
 	static final int DEFAULT_ROW_END = 20;
+	static final int DEFAULT_ROW_DELTA = DEFAULT_ROW_END - DEFAULT_ROW_START;
 	
 	private int start;
 	private int end;
@@ -353,6 +354,7 @@ public class PaginationComposite extends Composite
 			}
 			
 			int diff = end - start;
+			if (diff < DEFAULT_ROW_DELTA) diff = DEFAULT_ROW_DELTA;
 			
 			start = 1;
 			end = start + diff;
@@ -385,6 +387,7 @@ public class PaginationComposite extends Composite
 			}
 			
 			int diff = end - start;
+			if (diff < DEFAULT_ROW_DELTA) diff = DEFAULT_ROW_DELTA;
 			
 			start = start - (diff + 1);
 			if (start <= 0) start = 1;
@@ -419,6 +422,7 @@ public class PaginationComposite extends Composite
 			}
 			
 			int diff = end - start;
+			if (diff < DEFAULT_ROW_DELTA) diff = DEFAULT_ROW_DELTA;
 			
 			start = end + 1;
 			end = start + diff;
@@ -456,6 +460,7 @@ public class PaginationComposite extends Composite
 			}
 			
 			int diff = end - start;
+			if (diff < DEFAULT_ROW_DELTA) diff = DEFAULT_ROW_DELTA;
 			
 			end = total;
 			start = end - diff;

@@ -1,5 +1,8 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -24,10 +27,12 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
+import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 
 public class ProcessingComposite extends Composite
 {
-	private static final String[] statusSelection = new String[] { "ALL", "APPROVED" };
+	private static final String[] statusSelection = new String[] { "ALL", "APPROVED", "PROCESSED" };
 	private PaginationComposite xcmpPagination;
 	private Shell parentShell;
 	private ProcessingComposite self;
@@ -111,6 +116,7 @@ public class ProcessingComposite extends Composite
 			public void widgetSelected(SelectionEvent e)
 			{
 				Program.refreshProcessingTab(self, true);
+				table.setFocus();
 			}
 		});
 		
@@ -183,7 +189,7 @@ public class ProcessingComposite extends Composite
 						String textId = item.getText();
 						int id = Integer.parseInt(textId);
 						
-						Program.updateAssignment(parentShell, item, id);
+						Program.updateProcessing(parentShell, item, id);
 					}
 				}
 			}
@@ -201,31 +207,27 @@ public class ProcessingComposite extends Composite
 		tblclmnType.setWidth(100);
 		tblclmnType.setText("Type");
 		
-		TableColumn tblclmnFrom = new TableColumn(table, SWT.NONE);
-		tblclmnFrom.setWidth(100);
-		tblclmnFrom.setText("From");
-		
-		TableColumn tblclmnReceivedOn = new TableColumn(table, SWT.NONE);
-		tblclmnReceivedOn.setWidth(100);
-		tblclmnReceivedOn.setText("Received on");
-		
 		TableColumn tblclmnAssignedTo = new TableColumn(table, SWT.NONE);
 		tblclmnAssignedTo.setWidth(100);
 		tblclmnAssignedTo.setText("Assigned to");
-		
-		TableColumn tblclmnAssignedOn = new TableColumn(table, SWT.NONE);
-		tblclmnAssignedOn.setWidth(100);
-		tblclmnAssignedOn.setText("Assigned on");
 		
 		TableColumn tblclmnAssignedBy = new TableColumn(table, SWT.NONE);
 		tblclmnAssignedBy.setWidth(100);
 		tblclmnAssignedBy.setText("Assigned by");
 		
+		TableColumn tblclmnAssignedOn = new TableColumn(table, SWT.NONE);
+		tblclmnAssignedOn.setWidth(100);
+		tblclmnAssignedOn.setText("Assigned on");
+		
+		TableColumn tblclmnReceivedOn = new TableColumn(table, SWT.NONE);
+		tblclmnReceivedOn.setWidth(100);
+		tblclmnReceivedOn.setText("Received on");
+		
 		TableColumn tblclmnRemarks = new TableColumn(table, SWT.NONE);
 		tblclmnRemarks.setWidth(100);
 		tblclmnRemarks.setText("Remarks");
 		
-		// TODO Add revelant columns
+		// TODO get ui config
 	}
 	
 	@Override
@@ -243,5 +245,106 @@ public class ProcessingComposite extends Composite
 		
 		if (parent == null) throw new NullPointerException("Composite does not have a parent.");
 		this.parentShell = (Shell)parent;
+	}
+	
+	public void display(final List<Monitoring> rows, final int rowStart, final int rowEnd, final int rowTotal)
+	{
+		getDisplay().syncExec(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				displayAsync(rows);
+			}
+		});
+		
+		this.xcmpPagination.display(rowStart, rowEnd, rowTotal);
+	}
+	
+	protected void displayAsync(List<Monitoring> rows)
+	{
+		this.table.removeAll();
+		this.table.setEnabled(true);
+		
+		TableItem item;
+		
+		for (Monitoring row : rows)
+		{
+			item = new TableItem(table, SWT.NONE);
+			setText(item, row);
+		}
+	}
+	
+	public void clear()
+	{
+		this.table.removeAll();
+	}
+	
+	public static void setText(TableItem item, Monitoring row)
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
+		
+		item.setText(
+			Utilities.toArray(
+				String.format("%d", row.getID()), 
+				row.getStatus(), 
+				row.getRequestType(), 
+				row.getAssignedTo(), 
+				row.getAssignedBy(),
+				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()),
+				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+				row.getRemarks()));
+	}
+	
+	public void displayEmpty()
+	{
+		getDisplay().syncExec(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				displayEmptyAsync();
+			}
+		});
+		
+		this.xcmpPagination.displayEmpty();
+	}
+	
+	protected void displayEmptyAsync()
+	{
+		this.table.removeAll();
+		this.table.setEnabled(false);
+		
+		TableItem item;
+		
+		item = new TableItem(table, SWT.NONE);
+		item.setText("No data");
+	}
+	
+	public int getRowStart()
+	{
+		return this.xcmpPagination.getRowStart();
+	}
+	
+	public int getRowEnd()
+	{
+		return this.xcmpPagination.getRowEnd();
+	}
+	
+	public String getFilterStatus()
+	{
+		String text = this.cbxStatus.getText();
+		if (text.equals("ALL")) return "";
+		else return text;
+	}
+	
+	public String getFilterType()
+	{
+		return this.txtType.getText();
+	}
+
+	public String getFilterAssignedTo()
+	{
+		return this.txtAssignedTo.getText();
 	}
 }
