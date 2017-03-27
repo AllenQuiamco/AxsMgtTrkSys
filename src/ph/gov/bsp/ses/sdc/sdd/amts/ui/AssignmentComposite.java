@@ -289,7 +289,7 @@ public class AssignmentComposite extends Composite
 		
 		item.setText(
 			Utilities.toArray(
-				String.format("%d", row.getID()), 
+				String.format("%d", row.getId()), 
 				row.getStatus(), 
 				row.getRequestType(), 
 				row.getRequestedBy(), 

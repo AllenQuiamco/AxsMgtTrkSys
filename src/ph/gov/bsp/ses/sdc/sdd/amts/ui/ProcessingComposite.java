@@ -227,7 +227,7 @@ public class ProcessingComposite extends Composite
 		tblclmnRemarks.setWidth(100);
 		tblclmnRemarks.setText("Remarks");
 		
-		// TODO get ui config
+		// TODO Get ui config
 	}
 	
 	@Override
@@ -286,7 +286,7 @@ public class ProcessingComposite extends Composite
 		
 		item.setText(
 			Utilities.toArray(
-				String.format("%d", row.getID()), 
+				String.format("%d", row.getId()), 
 				row.getStatus(), 
 				row.getRequestType(), 
 				row.getAssignedTo(), 

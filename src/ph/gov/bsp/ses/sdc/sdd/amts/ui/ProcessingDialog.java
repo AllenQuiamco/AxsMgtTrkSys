@@ -1,10 +1,21 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.sql.Date;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.beans.PojoProperties;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
+import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -20,6 +31,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Common;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
@@ -46,6 +60,8 @@ public class ProcessingDialog extends Dialog
 	private Text txtAssignedBy;
 	private Combo cbxStatus;
 	private Label lblStatusAsterisk;
+	private Text txtRemarks;
+	private Hashtable<String, Color> defaultColors = new Hashtable<String, Color>();
 	
 	/**
 	 * Create the dialog.
@@ -62,7 +78,7 @@ public class ProcessingDialog extends Dialog
 	 * Open the dialog.
 	 * @return the result
 	 */
-	public Object open()
+	public boolean open()
 	{
 		createContents();
 		shell.open();
@@ -83,10 +99,11 @@ public class ProcessingDialog extends Dialog
 	 */
 	private void createContents()
 	{
-		shell = new Shell(getParent(), getStyle());
-		shell.setSize(450, 300);
-		shell.setText(getText());
-		shell.setText("Assignment Details");
+		shell = new Shell(getParent(), SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);
+		shell.setImage(SWTResourceManager.getImage(AssignmentDialog.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
+		shell.setMinimumSize(new Point(450, 326));
+		shell.setSize(450, 326);
+		shell.setText("Processing Details");
 		shell.setLayout(new FormLayout());
 		
 		cmpSave = new Composite(shell, SWT.NONE);
@@ -219,24 +236,46 @@ public class ProcessingDialog extends Dialog
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				MsgBoxResult dialogResult = MsgBox.show(shell, String.format("Are you sure you want to set this item as PROCESSED?%n%nThis may not be changed once set."), "Continue?", MsgBoxButtons.YES_NO, MsgBoxIcon.WARNING);
-				if (dialogResult.isYes())
+				if (cbxStatus.getText().equals("PROCESSED"))
 				{
-					getParent().getDisplay().asyncExec(new Runnable()
+					if (item.getStatus().equals("APPROVED"))
 					{
-						@Override
-						public void run()
+						MsgBoxResult dialogResult = MsgBox.show(shell, String.format("Are you sure you want to set this item as PROCESSED?%n%nThis may not be changed once set."), "Continue?", MsgBoxButtons.YES_NO, MsgBoxIcon.WARNING);
+						if (dialogResult.isYes())
 						{
-							if (Utilities.equals(item.getStatus(), itemEditable.getStatus()))
+							getParent().getDisplay().syncExec(new Runnable()
 							{
-								lblStatusAsterisk.setText("");
-							}
-							else
-							{
-								lblStatusAsterisk.setText("*");
-							}
+								@Override
+								public void run()
+								{
+									lblStatusAsterisk.setText("*");
+								}
+							});
 						}
-					});
+						else
+						{
+							getParent().getDisplay().syncExec(new Runnable()
+							{
+								@Override
+								public void run()
+								{
+									cbxStatus.deselectAll();
+								}
+							});
+						}
+					}
+					else
+					{
+						MsgBox.show(shell, "This item is not APPROVED.", "Invalid selection", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+						getParent().getDisplay().syncExec(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								cbxStatus.deselectAll();
+							}
+						});
+					}
 				}
 			}
 		});
@@ -254,6 +293,195 @@ public class ProcessingDialog extends Dialog
 		fd_lblStatusAsterisk.left = new FormAttachment(cbxStatus, 2);
 		lblStatusAsterisk.setLayoutData(fd_lblStatusAsterisk);
 		lblStatusAsterisk.setText("  ");
+		
+		Button btnDownload = new Button(cmpDetails, SWT.NONE);
+		btnDownload.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.createLocalCopy(shell, itemEditable.getId());
+			}
+		});
+		FormData fd_btnDownload = new FormData();
+		fd_btnDownload.top = new FormAttachment(txtAssignedBy, 3);
+		fd_btnDownload.right = new FormAttachment(100, 0);
+		btnDownload.setLayoutData(fd_btnDownload);
+		btnDownload.setText("Download files");
+		
+		Label lblRemarks = new Label(cmpDetails, SWT.NONE);
+		FormData fd_lblRemarks = new FormData();
+		fd_lblRemarks.top = new FormAttachment(0, 164);
+		fd_lblRemarks.left = new FormAttachment(0, 24);
+		lblRemarks.setLayoutData(fd_lblRemarks);
+		lblRemarks.setText("Remarks");
+		
+		txtRemarks = new Text(cmpDetails, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		FormData fd_txtRemarks = new FormData();
+		fd_txtRemarks.bottom = new FormAttachment(100);
+		fd_txtRemarks.right = new FormAttachment(100);
+		fd_txtRemarks.top = new FormAttachment(0, 161);
+		fd_txtRemarks.left = new FormAttachment(0, 74);
+		txtRemarks.setLayoutData(fd_txtRemarks);
+		txtRemarks.setText("Remarks\r\n2\r\n3\r\n4\r\n5\r\n6");
+		this.defaultColors.put("txtRemarks.background", txtRemarks.getBackground());
+		txtRemarks.addModifyListener(new ModifyListener()
+		{
+			public void modifyText(ModifyEvent e)
+			{
+				getParent().getDisplay().asyncExec(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
+						{
+							txtRemarks.setBackground(getDefaultColor("txtRemarks.background"));
+						}
+						else
+						{
+							txtRemarks.setBackground(getColor_BG_CHANGED_SETTING());
+						}
+					}
+				});
+			}
+		});
+		
+		initDataBindings();
 	}
 	
+	protected DataBindingContext initDataBindings() 
+	{
+		DataBindingContext bindingContext = new DataBindingContext();
+		//
+		IObservableValue observeTextTxtIdObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtId);
+		IObservableValue iDItemEditableObserveValue = PojoProperties.value("id").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtIdObserveWidget, iDItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeTextTxtTypeObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtType);
+		IObservableValue requestTypeItemEditableObserveValue = PojoProperties.value("requestType").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtTypeObserveWidget, requestTypeItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeTextTxtFromObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtFrom);
+		IObservableValue requestedByItemEditableObserveValue = PojoProperties.value("requestedBy").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtFromObserveWidget, requestedByItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeSelectionDtwAssignedOnDateObserveWidget = WidgetProperties.selection().observe(dtwAssignedOnDate);
+		IObservableValue assignedOnItemEditableObserveValue = PojoProperties.value("assignedOn").observe(itemEditable);
+		bindingContext.bindValue(observeSelectionDtwAssignedOnDateObserveWidget, assignedOnItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeSelectionDtwAssignedOnTimeObserveWidget = WidgetProperties.selection().observe(dtwAssignedOnTime);
+		bindingContext.bindValue(observeSelectionDtwAssignedOnTimeObserveWidget, assignedOnItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeTextTxtAssignedByObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtAssignedBy);
+		IObservableValue assignedByItemEditableObserveValue = PojoProperties.value("assignedBy").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtAssignedByObserveWidget, assignedByItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeTextCbxStatusObserveWidget = WidgetProperties.text().observe(cbxStatus);
+		IObservableValue statusItemEditableObserveValue = PojoProperties.value("status").observe(itemEditable);
+		bindingContext.bindValue(observeTextCbxStatusObserveWidget, statusItemEditableObserveValue, null, null);
+		//
+		IObservableValue observeTextTxtRemarksObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtRemarks);
+		IObservableValue remarksItemEditableObserveValue = PojoProperties.value("remarks").observe(itemEditable);
+		bindingContext.bindValue(observeTextTxtRemarksObserveWidget, remarksItemEditableObserveValue, null, null);
+		//
+		return bindingContext;
+	}
+	
+	public Monitoring getItem()
+	{
+		return item;
+	}
+	
+	public void setItem(Monitoring item)
+	{
+		this.item = item;
+		this.itemEditable = item.clone();
+	}
+	
+	public Monitoring getEditedItem()
+	{
+		return this.itemEditable;
+	}
+	
+	public List<Log> getChangeLog()
+	{
+		List<Log> logs = new LinkedList<Log>();
+		
+		Log log = null;
+		
+		if (!Utilities.isNullOrBlank(itemEditable.getStatus()))
+		{
+			if (!Utilities.equals(item.getStatus(), itemEditable.getStatus()))
+			{
+				log = new Log();
+				log.setAction("update");
+				log.setTableName("MONITORING");
+				log.setFieldName("Status");
+				log.setRowId(item.getId());
+				log.setOldValue(item.getStatus());
+				log.setNewValue(itemEditable.getStatus());
+				logs.add(log);
+				
+				String status = itemEditable.getStatus();
+				
+				if (status.equals("PROCESSED"))
+				{
+					if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+					{
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("ProcessedBy");
+						log.setRowId(item.getId());
+						log.setOldValue(item.getProcessedBy());
+						log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
+						logs.add(log);
+						
+						Date date = new Date(System.currentTimeMillis());
+						
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("ProcessedOn");
+						log.setRowId(item.getId());
+						log.setOldValue(Common.morphDate(item.getProcessedOn()));
+						log.setNewValue(Common.morphDate(date));
+						logs.add(log);
+						
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("ResolvedOn");
+						log.setRowId(item.getId());
+						log.setOldValue(Common.morphDate(item.getResolvedOn()));
+						log.setNewValue(Common.morphDate(date));
+						logs.add(log);
+					}
+				}
+			}
+		}
+		
+		if (!Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("Remarks");
+			log.setRowId(item.getId());
+			log.setOldValue(item.getRemarks());
+			log.setNewValue(itemEditable.getRemarks());
+			logs.add(log);
+		}
+		
+		return logs;
+	}
+	
+	private Color getColor_BG_CHANGED_SETTING()
+	{
+		return new Color(this.getParent().getDisplay(), 255, 255, 225);
+	}
+	
+	private Color getDefaultColor(String element)
+	{
+		return this.defaultColors.get(element);
+	}
 }

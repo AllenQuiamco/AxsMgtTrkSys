@@ -8,8 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -20,8 +18,6 @@ public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
 	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
-	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 	
 	private int id = -1; // 0 is test, any positive is actual data
 	private String folder;
@@ -61,12 +57,12 @@ public class Monitoring implements Cloneable
 		return clone;
 	}
 	
-	public int getID()
+	public int getId()
 	{
 		return id;
 	}
 
-	public void setID(int id)
+	public void setId(int id)
 	{
 		this.id = id;
 	}
@@ -103,13 +99,13 @@ public class Monitoring implements Cloneable
 
 	public Date getReceivedOn()
 	{
-		return getDate(receivedOn);
+		return Common.getDate(receivedOn);
 	}
 	
 	public void setReceivedOn(Date receivedOn)
 	{
 		//this.receivedOn = formatDate(receivedOn);
-		this.receivedOn = morphDate(receivedOn);
+		this.receivedOn = Common.morphDate(receivedOn);
 	}
 
 	public String getReceivedBy()
@@ -154,13 +150,13 @@ public class Monitoring implements Cloneable
 
 	public Date getAssignedOn()
 	{
-		return getDate(assignedOn);
+		return Common.getDate(assignedOn);
 	}
 
 	public void setAssignedOn(Date assignedOn)
 	{
 		//this.assignedOn = formatDate(assignedOn);
-		this.assignedOn = morphDate(assignedOn);
+		this.assignedOn = Common.morphDate(assignedOn);
 	}
 
 	public String getProcessedBy()
@@ -175,24 +171,24 @@ public class Monitoring implements Cloneable
 
 	public Date getProcessedOn()
 	{
-		return getDate(processedOn);
+		return Common.getDate(processedOn);
 	}
 
 	public void setProcessedOn(Date processedOn)
 	{
 		//this.processedOn = formatDate(processedOn);
-		this.processedOn = morphDate(processedOn);
+		this.processedOn = Common.morphDate(processedOn);
 	}
 
 	public Date getResolvedOn()
 	{
-		return getDate(resolvedOn);
+		return Common.getDate(resolvedOn);
 	}
 
 	public void setResolvedOn(Date resolvedOn)
 	{
 		//this.resolvedOn = formatDate(resolvedOn);
-		this.resolvedOn = morphDate(resolvedOn);
+		this.resolvedOn = Common.morphDate(resolvedOn);
 	}
 
 	public String getRemarks()
@@ -205,60 +201,6 @@ public class Monitoring implements Cloneable
 		this.remarks = remarks;
 	}
 
-	public static Date getDate(String value)
-	{
-		Date retobj = null;
-		if (value == null) return retobj;
-		try
-		{
-			java.util.Date date = DATE_FORMATTER.parse(value);
-			retobj = new Date(date.getTime());
-		}
-		catch (ParseException pe)
-		{
-			pe.printStackTrace();
-		}
-		return retobj;
-	}
-	
-	public static Date getDate(Long value) // yyyyMMddHHmmss
-	{
-		if (value == null) return null;
-		
-		long year = value / 10000000000L;
-		value = value % 10000000000L;
-		
-		long month =  value / 100000000L;
-		value = value % 100000000L;
-		
-		long day = value / 1000000L;
-		value = value % 1000000L;
-		
-		long hour = value / 10000L;
-		value = value % 10000L;
-		
-		long mins = value / 100;
-		value = value % 100;
-		
-		long secs = value;
-		
-		return getDate(String.format("%d-%d-%d %d:%d:%d", year, month, day, hour, mins, secs));
-	}
-	
-	public static String formatDate(Date value)
-	{
-		if (value == null) return null;
-		return DATE_FORMATTER.format(value);
-	}
-	
-	public static Long morphDate(Date value)
-	{
-		if (value == null) return null;
-		String formattedDate = formatDate(value);
-		formattedDate = formattedDate.replace("-", "").replace(" ", "").replace(":", "");
-		return Long.parseLong(formattedDate);
-	}
-	
 	@SuppressWarnings("deprecation")
 	public static LinkedList<Monitoring> getSamples(int max)
 	{

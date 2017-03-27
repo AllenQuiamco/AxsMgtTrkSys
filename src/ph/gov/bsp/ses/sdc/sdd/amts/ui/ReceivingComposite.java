@@ -264,7 +264,7 @@ public class ReceivingComposite extends Composite
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
-		item.setText(Utilities.toArray(String.format("%d", row.getID()), row.getFolder(), row.getRequestType(), row.getRequestedBy(), (row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), row.getReceivedBy(), row.getRemarks()));
+		item.setText(Utilities.toArray(String.format("%d", row.getId()), row.getFolder(), row.getRequestType(), row.getRequestedBy(), (row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), row.getReceivedBy(), row.getRemarks()));
 	}
 	
 	public void displayEmpty()

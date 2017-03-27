@@ -90,9 +90,9 @@ public class MainWindow
 	protected void createContents()
 	{
 		shell = new Shell();
-		shell.setMinimumSize(new Point(450, 300));
+		shell.setMinimumSize(new Point(500, 400));
 		shell.setImage(SWTResourceManager.getImage(MainWindow.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
-		shell.setSize(450, 300);
+		shell.setSize(500, 400);
 		shell.setText("Access Management Tracking System");
 		FillLayout fl_shell = new FillLayout(SWT.VERTICAL);
 		fl_shell.spacing = 1;
@@ -154,6 +154,7 @@ public class MainWindow
 		lblLoggedOnAs.setText("Logged on as:");
 		
 		txtLoggedOnAs = new Text(cmpInfoUser, SWT.BORDER);
+		txtLoggedOnAs.setEditable(false);
 		txtLoggedOnAs.setText(Program.USER);
 		txtLoggedOnAs.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		
@@ -246,6 +247,13 @@ public class MainWindow
 		
 		Composite cmpOutput = new Composite(tabs, SWT.NONE);
 		tabOutput.setControl(cmpOutput);
+		cmpOutput.setLayout(new FormLayout());
+		
+		RawDataOutputGroup xgrpRawData = new RawDataOutputGroup(cmpOutput, SWT.NONE);
+		FormData fd_xgrpRawData = new FormData();
+		fd_xgrpRawData.top = new FormAttachment(0, 10);
+		fd_xgrpRawData.left = new FormAttachment(0, 10);
+		xgrpRawData.setLayoutData(fd_xgrpRawData);
 		
 		TabItem tabSettings = new TabItem(tabs, SWT.NONE);
 		tabSettings.setText("Settings");

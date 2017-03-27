@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Common;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
@@ -384,7 +385,7 @@ public class AssignmentDialog extends Dialog
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
 		IObservableValue observeTextTxtIdObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtId);
-		IObservableValue iDItemEditableObserveValue = PojoProperties.value("ID").observe(itemEditable);
+		IObservableValue iDItemEditableObserveValue = PojoProperties.value("id").observe(itemEditable);
 		bindingContext.bindValue(observeTextTxtIdObserveWidget, iDItemEditableObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtTypeObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtType);
@@ -443,62 +444,65 @@ public class AssignmentDialog extends Dialog
 		
 		Log log = null;
 		
-		if (!Utilities.equals(item.getStatus(), itemEditable.getStatus()))
+		if (!Utilities.isNullOrBlank(itemEditable.getStatus()))
 		{
-			log = new Log();
-			log.setAction("update");
-			log.setTableName("MONITORING");
-			log.setFieldName("Status");
-			log.setRowId(item.getID());
-			log.setOldValue(item.getStatus());
-			log.setNewValue(itemEditable.getStatus());
-			logs.add(log);
-		}
-		
-		String status = itemEditable.getStatus();
-		
-		if (status.equals("APPROVED"))
-		{
-			if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+			if (!Utilities.equals(item.getStatus(), itemEditable.getStatus()))
 			{
 				log = new Log();
 				log.setAction("update");
 				log.setTableName("MONITORING");
-				log.setFieldName("AssignedTo");
-				log.setRowId(item.getID());
-				log.setOldValue(item.getAssignedTo());
-				log.setNewValue(itemEditable.getAssignedTo());
+				log.setFieldName("Status");
+				log.setRowId(item.getId());
+				log.setOldValue(item.getStatus());
+				log.setNewValue(itemEditable.getStatus());
 				logs.add(log);
 				
-				log = new Log();
-				log.setAction("update");
-				log.setTableName("MONITORING");
-				log.setFieldName("AssignedBy");
-				log.setRowId(item.getID());
-				log.setOldValue(item.getAssignedTo());
-				log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
-				logs.add(log);
+				String status = itemEditable.getStatus();
 				
-				log = new Log();
-				log.setAction("update");
-				log.setTableName("MONITORING");
-				log.setFieldName("AssignedOn");
-				log.setRowId(item.getID());
-				log.setOldValue(Monitoring.morphDate(item.getAssignedOn()));
-				log.setNewValue(Monitoring.morphDate(new Date(System.currentTimeMillis())));
-				logs.add(log);
+				if (status.equals("APPROVED"))
+				{
+					if (!Utilities.equals(item.getAssignedTo(), itemEditable.getAssignedTo()))
+					{
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("AssignedTo");
+						log.setRowId(item.getId());
+						log.setOldValue(item.getAssignedTo());
+						log.setNewValue(itemEditable.getAssignedTo());
+						logs.add(log);
+						
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("AssignedBy");
+						log.setRowId(item.getId());
+						log.setOldValue(item.getAssignedTo());
+						log.setNewValue(Program.USER); // XXX Direct reference to Program.USER
+						logs.add(log);
+						
+						log = new Log();
+						log.setAction("update");
+						log.setTableName("MONITORING");
+						log.setFieldName("AssignedOn");
+						log.setRowId(item.getId());
+						log.setOldValue(Common.morphDate(item.getAssignedOn()));
+						log.setNewValue(Common.morphDate(new Date(System.currentTimeMillis())));
+						logs.add(log);
+					}
+				}
+				else if (status.equals("DISAPPROVED") || status.equals("CANCELLED"))
+				{
+					log = new Log();
+					log.setAction("update");
+					log.setTableName("MONITORING");
+					log.setFieldName("ResolvedOn");
+					log.setRowId(item.getId());
+					log.setOldValue(Common.morphDate(item.getResolvedOn()));
+					log.setNewValue(Common.morphDate(new Date(System.currentTimeMillis())));
+					logs.add(log);
+				}
 			}
-		}
-		else if (status.equals("DISAPPROVED") || status.equals("CANCELLED"))
-		{
-			log = new Log();
-			log.setAction("update");
-			log.setTableName("MONITORING");
-			log.setFieldName("ResolvedOn");
-			log.setRowId(item.getID());
-			log.setOldValue(Monitoring.morphDate(item.getResolvedOn()));
-			log.setNewValue(Monitoring.morphDate(new Date(System.currentTimeMillis())));
-			logs.add(log);
 		}
 		
 		if (!Utilities.equals(item.getRemarks(), itemEditable.getRemarks()))
@@ -507,7 +511,7 @@ public class AssignmentDialog extends Dialog
 			log.setAction("update");
 			log.setTableName("MONITORING");
 			log.setFieldName("Remarks");
-			log.setRowId(item.getID());
+			log.setRowId(item.getId());
 			log.setOldValue(item.getRemarks());
 			log.setNewValue(itemEditable.getRemarks());
 			logs.add(log);

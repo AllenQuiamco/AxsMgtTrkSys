@@ -1,6 +1,8 @@
 package ph.gov.bsp.ses.sdc.sdd.amts;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
@@ -30,13 +32,13 @@ import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ProcessingComposite;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.ProcessingDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingComposite;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class Program
 {
@@ -412,7 +414,7 @@ public class Program
 					// var = true & check > if a table fails, the entire var is
 					// false
 					valid = valid && new Version(conn).validateConnection();
-					// TODO add more tables here
+					// TODO Add more tables here
 					
 				}
 				finally
@@ -1062,7 +1064,135 @@ public class Program
 	
 	public static void updateProcessing(Shell shell, TableItem tableItem, int id)
 	{
-		// TODO implement
-		throw new NotImplementedException();
+		try
+		{
+			Connection conn = null;
+			Monitoring item = null;
+			
+			try
+			{
+				conn = getConnection();
+				
+				item = Monitoring.getItem(conn, id);
+			}
+			finally
+			{
+				if (conn != null) conn.close();
+			}
+			
+			if (item != null)
+			{
+				ProcessingDialog edit = new ProcessingDialog(shell, SWT.NONE);
+				
+				edit.setItem(item);
+				if (edit.open())
+				{
+					List<Log> logs = edit.getChangeLog();
+					if (logs.size() <= 0) return;
+					
+					try
+					{
+						conn = getConnection();
+						conn.setAutoCommit(false);
+						
+						Monitoring.update(conn, logs);
+						Log.append(conn, logs, Program.USER, new Date(System.currentTimeMillis()));
+						
+						conn.commit();
+						
+						Monitoring row = Monitoring.getItem(conn, id);
+						ProcessingComposite.setText(tableItem, row);
+					}
+					catch (Exception e)
+					{
+						conn.rollback();
+						throw e;
+					}
+					finally
+					{
+						if (conn != null) conn.close(); 
+					}
+				}
+			}
+			else
+			{
+				throw new NullPointerException("Monitoring.getItem(Connection, int) returned null");
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to update.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+	}
+
+	public static void createLocalCopy(Shell shell, int id)
+	{
+		try
+		{
+			Connection conn = null;
+			Monitoring item = null; 
+			
+			try
+			{
+				conn = getConnection();
+				item = Monitoring.getItem(conn, id);
+			}
+			finally 
+			{
+				if (conn != null) conn.close();
+			}
+			
+			if (item == null) throw new NullPointerException("Monitoring.getItem(Connection, int) returned null");
+			
+			String path;
+			
+			path = getSetting("path.fileserver");
+			File srcbase = new File(path);
+			if (!srcbase.exists()) throw new FileNotFoundException(String.format("The path \"%s\" does not exist.", path));
+			if (!srcbase.isDirectory()) throw new FileNotFoundException(String.format("The path \"%s\" is not a directory.", path));
+			
+			path = getSetting("path.localcopy");
+			File tgtbase = new File(path);
+			if (!tgtbase.exists()) throw new FileNotFoundException(String.format("The path \"%s\" does not exist.", path));
+			if (!tgtbase.isDirectory()) throw new FileNotFoundException(String.format("The path \"%s\" is not a directory", path));
+			
+			File src_dir = new File(srcbase, item.getFolder());
+			if (!src_dir.exists()) throw new FileNotFoundException(String.format("Folder \"%s\" is missing.", item.getFolder()));
+			if (!src_dir.isDirectory()) throw new FileNotFoundException(String.format("The path \"%s\" is not a directory", src_dir.getAbsolutePath()));
+			
+			File tgt_dir = new File(tgtbase, item.getFolder());
+			if (tgt_dir.exists()) 
+			{
+				for (int i = 1; i <= Integer.MAX_VALUE; i++)
+				{
+					tgt_dir = new File(tgtbase, String.format("%s-%d", item.getFolder(), i));
+					if (!tgt_dir.exists())
+					{
+						if (!tgt_dir.mkdir()) throw new IOException("File.mkdir() failed on path " + tgt_dir.getAbsolutePath());
+						break;
+					}
+				}
+			}
+			else if (!tgt_dir.mkdir()) throw new IOException("File.mkdir() failed on path " + tgt_dir.getAbsolutePath());
+			
+			// Copy the files
+			for (File src : src_dir.listFiles())
+			{
+				FileUtils.copyFile(src, new File(tgt_dir, src.getName()));
+			}
+			
+			Desktop.getDesktop().open(tgt_dir);
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, e.getMessage(), "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to create local copy.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
 	}
 }

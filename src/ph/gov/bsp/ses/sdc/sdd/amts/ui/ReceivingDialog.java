@@ -9,7 +9,6 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
@@ -337,11 +336,12 @@ public class ReceivingDialog extends Dialog
 		initDataBindings();
 	}
 	
-	protected DataBindingContext initDataBindings() {
+	protected DataBindingContext initDataBindings()
+	{
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
 		IObservableValue observeTextTxtIdObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtId);
-		IObservableValue iDItemObserveValue = PojoProperties.value("ID").observe(itemEditable);
+		IObservableValue iDItemObserveValue = PojoProperties.value("id").observe(itemEditable);
 		bindingContext.bindValue(observeTextTxtIdObserveWidget, iDItemObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtFolderObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtFolder);
@@ -402,7 +402,7 @@ public class ReceivingDialog extends Dialog
 			log.setAction("update");
 			log.setTableName("MONITORING");
 			log.setFieldName("RequestType");
-			log.setRowId(item.getID());
+			log.setRowId(item.getId());
 			log.setOldValue(item.getRequestType());
 			log.setNewValue(itemEditable.getRequestType());
 			logs.add(log);
@@ -414,7 +414,7 @@ public class ReceivingDialog extends Dialog
 			log.setAction("update");
 			log.setTableName("MONITORING");
 			log.setFieldName("RequestedBy");
-			log.setRowId(item.getID());
+			log.setRowId(item.getId());
 			log.setOldValue(item.getRequestedBy());
 			log.setNewValue(itemEditable.getRequestedBy());
 			logs.add(log);
@@ -426,7 +426,7 @@ public class ReceivingDialog extends Dialog
 			log.setAction("update");
 			log.setTableName("MONITORING");
 			log.setFieldName("Remarks");
-			log.setRowId(item.getID());
+			log.setRowId(item.getId());
 			log.setOldValue(item.getRemarks());
 			log.setNewValue(itemEditable.getRemarks());
 			logs.add(log);
