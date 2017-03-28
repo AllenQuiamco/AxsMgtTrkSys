@@ -65,6 +65,6 @@ public class Common
 
 	public static Long morphDate(int year, int month, int day)
 	{
-		return (year * 10000000000L) + (month * 100000000L) + (day * 1000000L);
+		return (year * 10000000000L) + ((month + 1) * 100000000L) + (day * 1000000L);
 	}
 }

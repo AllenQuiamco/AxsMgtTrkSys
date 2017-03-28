@@ -123,7 +123,7 @@ public class ProcessingDialog extends Dialog
 				shell.close();
 			}
 		});
-		btnSave.setText("Save");
+		btnSave.setText("Update");
 		
 		cmpDetails = new Composite(shell, SWT.NONE);
 		cmpDetails.setLayout(new FormLayout());
@@ -134,55 +134,71 @@ public class ProcessingDialog extends Dialog
 		fd_cmpDetails.top = new FormAttachment(0);
 		cmpDetails.setLayoutData(fd_cmpDetails);
 		
-		Label lblId = new Label(cmpDetails, SWT.NONE);
-		FormData fd_lblId = new FormData();
-		fd_lblId.top = new FormAttachment(0, 8);
-		fd_lblId.left = new FormAttachment(0, 58);
-		lblId.setLayoutData(fd_lblId);
-		lblId.setText("ID");
-		
 		txtId = new Text(cmpDetails, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_txtId = new FormData();
 		fd_txtId.right = new FormAttachment(100);
 		fd_txtId.top = new FormAttachment(0, 5);
-		fd_txtId.left = new FormAttachment(0, 74);
+		fd_txtId.left = new FormAttachment(0, 80);
 		txtId.setLayoutData(fd_txtId);
 		txtId.setText("ID");
+		
+		Label lblId = new Label(cmpDetails, SWT.NONE);
+		FormData fd_lblId = new FormData();
+		fd_lblId.top = new FormAttachment(0, 8);
+		fd_lblId.right = new FormAttachment(txtId, -5);
+		lblId.setLayoutData(fd_lblId);
+		lblId.setText("ID");
 		
 		txtType = new Text(cmpDetails, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_txtType = new FormData();
 		fd_txtType.right = new FormAttachment(100);
 		fd_txtType.top = new FormAttachment(0, 31);
-		fd_txtType.left = new FormAttachment(0, 74);
+		fd_txtType.left = new FormAttachment(0, 80);
 		txtType.setLayoutData(fd_txtType);
 		txtType.setText("Type");
 		
 		Label lblType = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblType = new FormData();
 		fd_lblType.top = new FormAttachment(0, 34);
-		fd_lblType.right = new FormAttachment(txtType, -4);
+		fd_lblType.right = new FormAttachment(txtType, -5);
 		lblType.setLayoutData(fd_lblType);
-		lblType.setText("Request");
+		lblType.setText("Request type");
 		
 		txtFrom = new Text(cmpDetails, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_txtFrom = new FormData();
 		fd_txtFrom.right = new FormAttachment(100);
 		fd_txtFrom.top = new FormAttachment(0, 57);
-		fd_txtFrom.left = new FormAttachment(0, 74);
+		fd_txtFrom.left = new FormAttachment(0, 80);
 		txtFrom.setLayoutData(fd_txtFrom);
 		txtFrom.setText("From");
 		
 		Label lblFrom = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblFrom = new FormData();
 		fd_lblFrom.top = new FormAttachment(0, 60);
-		fd_lblFrom.right = new FormAttachment(txtType, -4);
+		fd_lblFrom.right = new FormAttachment(txtType, -5);
 		lblFrom.setLayoutData(fd_lblFrom);
 		lblFrom.setText("From");
+		
+		dtwAssignedOnDate = new DateTime(cmpDetails, SWT.BORDER);
+		dtwAssignedOnDate.setEnabled(false);
+		FormData fd_dtwAssignedOnDate = new FormData();
+		fd_dtwAssignedOnDate.right = new FormAttachment(0, 180);
+		fd_dtwAssignedOnDate.top = new FormAttachment(0, 82);
+		fd_dtwAssignedOnDate.left = new FormAttachment(0, 80);
+		dtwAssignedOnDate.setLayoutData(fd_dtwAssignedOnDate);
+		
+		dtwAssignedOnTime = new DateTime(cmpDetails, SWT.BORDER | SWT.TIME);
+		dtwAssignedOnTime.setEnabled(false);
+		FormData fd_dtwAssignedOnTime = new FormData();
+		fd_dtwAssignedOnTime.left = new FormAttachment(dtwAssignedOnDate, 3);
+		fd_dtwAssignedOnTime.right = new FormAttachment(dtwAssignedOnDate, 103, SWT.RIGHT);
+		fd_dtwAssignedOnTime.top = new FormAttachment(0, 82);
+		dtwAssignedOnTime.setLayoutData(fd_dtwAssignedOnTime);
 		
 		Label lblAssignedOn = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblAssignedOn = new FormData();
 		fd_lblAssignedOn.top = new FormAttachment(0, 86);
-		fd_lblAssignedOn.left = new FormAttachment(0, 5);
+		fd_lblAssignedOn.right = new FormAttachment(dtwAssignedOnDate, -5);
 		lblAssignedOn.setLayoutData(fd_lblAssignedOn);
 		lblAssignedOn.setText("Assigned on");
 		
@@ -194,36 +210,20 @@ public class ProcessingDialog extends Dialog
 		lblAssignedOnSub.setLayoutData(fd_lblAssignedOnSub);
 		lblAssignedOnSub.setText("( m / d / yyyy )");
 		
-		dtwAssignedOnDate = new DateTime(cmpDetails, SWT.BORDER);
-		dtwAssignedOnDate.setEnabled(false);
-		FormData fd_dtwAssignedOnDate = new FormData();
-		fd_dtwAssignedOnDate.right = new FormAttachment(0, 174);
-		fd_dtwAssignedOnDate.top = new FormAttachment(0, 82);
-		fd_dtwAssignedOnDate.left = new FormAttachment(0, 74);
-		dtwAssignedOnDate.setLayoutData(fd_dtwAssignedOnDate);
-		
-		dtwAssignedOnTime = new DateTime(cmpDetails, SWT.BORDER | SWT.TIME);
-		dtwAssignedOnTime.setEnabled(false);
-		FormData fd_dtwAssignedOnTime = new FormData();
-		fd_dtwAssignedOnTime.left = new FormAttachment(0, 177);
-		fd_dtwAssignedOnTime.right = new FormAttachment(0, 277);
-		fd_dtwAssignedOnTime.top = new FormAttachment(0, 82);
-		dtwAssignedOnTime.setLayoutData(fd_dtwAssignedOnTime);
-		
-		Label lblAssignedBy = new Label(cmpDetails, SWT.NONE);
-		FormData fd_lblAssignedBy = new FormData();
-		fd_lblAssignedBy.top = new FormAttachment(0, 112);
-		fd_lblAssignedBy.left = new FormAttachment(0, 6);
-		lblAssignedBy.setLayoutData(fd_lblAssignedBy);
-		lblAssignedBy.setText("Assigned by");
-		
 		txtAssignedBy = new Text(cmpDetails, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_txtAssignedBy = new FormData();
 		fd_txtAssignedBy.right = new FormAttachment(100);
 		fd_txtAssignedBy.top = new FormAttachment(0, 109);
-		fd_txtAssignedBy.left = new FormAttachment(0, 74);
+		fd_txtAssignedBy.left = new FormAttachment(0, 80);
 		txtAssignedBy.setLayoutData(fd_txtAssignedBy);
 		txtAssignedBy.setText("Assigned by");
+		
+		Label lblAssignedBy = new Label(cmpDetails, SWT.NONE);
+		FormData fd_lblAssignedBy = new FormData();
+		fd_lblAssignedBy.top = new FormAttachment(0, 112);
+		fd_lblAssignedBy.right = new FormAttachment(txtAssignedBy, -5);
+		lblAssignedBy.setLayoutData(fd_lblAssignedBy);
+		lblAssignedBy.setText("Assigned by");
 		
 		cbxStatus = new Combo(cmpDetails, SWT.READ_ONLY);
 		cbxStatus.setItems(statusSelection);
@@ -283,7 +283,7 @@ public class ProcessingDialog extends Dialog
 		Label lblStatus = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblStatus = new FormData();
 		fd_lblStatus.top = new FormAttachment(0, 138);
-		fd_lblStatus.right = new FormAttachment(cbxStatus, -4);
+		fd_lblStatus.right = new FormAttachment(cbxStatus, -5);
 		lblStatus.setLayoutData(fd_lblStatus);
 		lblStatus.setText("Set Status");
 		
@@ -307,19 +307,12 @@ public class ProcessingDialog extends Dialog
 		btnDownload.setLayoutData(fd_btnDownload);
 		btnDownload.setText("Download files");
 		
-		Label lblRemarks = new Label(cmpDetails, SWT.NONE);
-		FormData fd_lblRemarks = new FormData();
-		fd_lblRemarks.top = new FormAttachment(0, 164);
-		fd_lblRemarks.left = new FormAttachment(0, 24);
-		lblRemarks.setLayoutData(fd_lblRemarks);
-		lblRemarks.setText("Remarks");
-		
 		txtRemarks = new Text(cmpDetails, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
 		FormData fd_txtRemarks = new FormData();
 		fd_txtRemarks.bottom = new FormAttachment(100);
 		fd_txtRemarks.right = new FormAttachment(100);
 		fd_txtRemarks.top = new FormAttachment(0, 161);
-		fd_txtRemarks.left = new FormAttachment(0, 74);
+		fd_txtRemarks.left = new FormAttachment(0, 80);
 		txtRemarks.setLayoutData(fd_txtRemarks);
 		txtRemarks.setText("Remarks\r\n2\r\n3\r\n4\r\n5\r\n6");
 		this.defaultColors.put("txtRemarks.background", txtRemarks.getBackground());
@@ -345,7 +338,16 @@ public class ProcessingDialog extends Dialog
 			}
 		});
 		
+		Label lblRemarks = new Label(cmpDetails, SWT.NONE);
+		FormData fd_lblRemarks = new FormData();
+		fd_lblRemarks.top = new FormAttachment(0, 164);
+		fd_lblRemarks.right = new FormAttachment(txtRemarks, -5);
+		lblRemarks.setLayoutData(fd_lblRemarks);
+		lblRemarks.setText("Remarks");
+		
 		initDataBindings();
+		
+		// TODO EnteredOn
 	}
 	
 	protected DataBindingContext initDataBindings() 
@@ -483,5 +485,72 @@ public class ProcessingDialog extends Dialog
 	private Color getDefaultColor(String element)
 	{
 		return this.defaultColors.get(element);
+	}
+
+	public void setWindowState(String string)
+	{
+		if (Utilities.isNullOrBlank(string)) return;
+		
+		String[] split = string.trim().split("\\s+");
+		String state = Utilities.getArrayItem(split, 0); if (state == null) state = ""; state = state.toUpperCase();
+		String posX = Utilities.getArrayItem(split, 1);
+		String posY = Utilities.getArrayItem(split, 2);
+		String sizeX = Utilities.getArrayItem(split, 3);
+		String sizeY = Utilities.getArrayItem(split, 4);
+		
+		if (state.equals("MAXIMIZED"))
+		{
+			shell.setMaximized(true);
+			//shell.setMinimized(false);
+		}
+		else if (state.equals("RESTORED"))
+		{
+			shell.setMaximized(false);
+			shell.setMinimized(false);
+			
+			if ((posX != null) && (posY != null))
+			{
+				try
+				{
+					int x = Integer.parseInt(posX);
+					int y = Integer.parseInt(posY);
+					
+					if (x < 0) x = 0;
+					if (y < 0) y = 0;
+					
+					shell.setLocation(new Point(x, y));
+				}
+				catch (NumberFormatException e) { }
+			}
+			
+			if ((sizeX != null) && (sizeY != null))
+			{
+				try
+				{
+					int x = Integer.parseInt(sizeX);
+					int y = Integer.parseInt(sizeY);
+					
+					if (x < 0) x = 0;
+					if (y < 0) y = 0;
+					
+					shell.setSize(x, y);
+				}
+				catch (NumberFormatException e) { }
+			}
+		}
+	}
+	
+	public String getWindowState()
+	{
+		boolean max = shell.getMaximized();
+		boolean min = shell.getMinimized();
+		Point location = shell.getLocation();
+		Point size = shell.getSize();
+		String state = "";
+		if (max && min) state = "MAXIMIZED";
+		else if(max && !min) state = "MAXIMIZED";
+		else if(!max && min) state = "RESTORED";
+		else state = "RESTORED";
+		return String.format("%s %d %d %d %d", state, location.x, location.y, size.x, size.y);
 	}
 }

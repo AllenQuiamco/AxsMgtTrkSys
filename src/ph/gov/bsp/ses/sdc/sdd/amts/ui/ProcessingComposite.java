@@ -228,6 +228,8 @@ public class ProcessingComposite extends Composite
 		tblclmnRemarks.setText("Remarks");
 		
 		// TODO Get ui config
+		// TODO EnteredOn
+		// TODO Additional columns
 	}
 	
 	@Override

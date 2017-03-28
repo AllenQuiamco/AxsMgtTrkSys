@@ -1,5 +1,6 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.sql.Date;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -352,6 +353,8 @@ public class RawDataOutputGroup extends Group
 		});
 		btnCreate.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
 		btnCreate.setText("Create");
+		
+		// TODO Select by * except ID and Remarks
 	}
 	
 	@Override
@@ -374,58 +377,89 @@ public class RawDataOutputGroup extends Group
 	
 	protected void btnCreate_widgetSelected(SelectionEvent selectionEvent)
 	{
-		MsgBox.show(getShell(), String.format("This feature is not yet implemented.%n%nRawDataOutputGroup.btnCreate_widgetSelected(SelectionEvent)"));
-//		try
-//		{
-//			String table = null;
-//			boolean monitoring = btnMonitoring.getSelection();
-//			boolean log = btnLog.getSelection(); 
-//			if (monitoring && log) throw new IllegalStateException(String.format("MONITORING=%B & LOG=%B", monitoring, log));
-//			else if (monitoring && !log) table = "MONITORING";
-//			else if (!monitoring && log) table = "LOG";
-//			else throw new IllegalArgumentException("Please select a table.");
-//			
-//			String range = null;
-//			boolean all = btnAll.getSelection();
-//			boolean date = btnDate.getSelection();
-//			boolean row = btnRow.getSelection();
-//			if (all && !date && !row) range = "ALL";
-//			else if (!all && date && !row) range = "DATE";
-//			else if (!all && !date && row) range = "ROW";
-//			else if (!all && !date && !row) throw new IllegalArgumentException("Please select a range.");
-//			else throw new IllegalStateException(String.format("ALL=%B & DATE=%B & ROW=%B", all, date, row));
-//			
-//			if (date)
-//			{
-//				String dateFromData = null;
-//				boolean dateEarliest = btnDateEarliest.getSelection();
-//				boolean dateFrom = btnDateFrom.getSelection();
-//				if (dateEarliest && dateFrom) throw new IllegalStateException(String.format("EARLIEST=%B & FROM=%B", dateEarliest, dateFrom));
-//				else if (dateEarliest && !dateFrom) dateFromData = ">0"; 
-//				else if (!dateEarliest && dateFrom) dateFromData = ">=" + Common.morphDate(dtwFrom.getYear(), dtwFrom.getMonth(), dtwFrom.getDay());
-//				else throw new IllegalArgumentException("Please select a starting date.");
-//				
-//				Calendar calendar = Calendar.getInstance();
-//				calendar.set(dtwTo.getYear(), dtwTo.getMonth(), dtwTo.getDay());
-//				calendar.roll(Calendar.DAY_OF_MONTH, true);
-//				
-//				String dateToData = null;
-//				boolean dateLatest = btnDateLatest.getSelection();
-//				boolean dateTo = btnDateTo.getSelection();
-//				if (dateLatest && dateTo) throw new IllegalStateException(String.format("LATEST=%B & TO=%B", dateLatest, dateTo));
-//				else if (dateLatest && !dateTo) dateToData = "<=99999999999999"; 
-//				else if (!dateLatest && dateTo) dateToData = "<" + Common.morphDate(dtwTo.setd);
-//				else throw new IllegalArgumentException("Please select an ending date.");
-//			}
-//		}
-//		catch(IllegalArgumentException iae)
-//		{
-//			MsgBox.show(getShell(), iae.getMessage(), "Invalid input", MsgBoxButtons.OK, MsgBoxIcon.WARNING);
-//		}
-//		catch (Exception e)
-//		{
-//			e.printStackTrace();
-//			MsgBox.show(getShell(), "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-//		}
+		try
+		{
+			String table = null;
+			boolean monitoring = btnMonitoring.getSelection();
+			boolean log = btnLog.getSelection(); 
+			if (monitoring && log) throw new IllegalStateException(String.format("MONITORING=%B & LOG=%B", monitoring, log));
+			else if (monitoring && !log) table = "MONITORING";
+			else if (!monitoring && log) table = "LOG";
+			else throw new IllegalArgumentException("Please select a table.");
+			
+			String range = null;
+			boolean all = btnAll.getSelection();
+			boolean date = btnDate.getSelection();
+			boolean row = btnRow.getSelection();
+			if (all && !date && !row) range = "ALL";
+			else if (!all && date && !row) range = "DATE";
+			else if (!all && !date && row) range = "ROW";
+			else if (!all && !date && !row) throw new IllegalArgumentException("Please select a range.");
+			else throw new IllegalStateException(String.format("ALL=%B & DATE=%B & ROW=%B", all, date, row));
+			
+			if (date)
+			{
+				boolean dateEarliest = btnDateEarliest.getSelection();
+				boolean dateFrom = btnDateFrom.getSelection();
+				boolean dateLatest = btnDateLatest.getSelection();
+				boolean dateTo = btnDateTo.getSelection();
+				
+				Calendar calendar = GregorianCalendar.getInstance();
+				Calendar calFrom = (Calendar)calendar.clone(); get(calFrom, dtwFrom);
+				Calendar calTooo = (Calendar)calendar.clone(); get(calTooo, dtwTo);
+				if (dateFrom && dateTo)
+				{
+					if (calFrom.compareTo(calTooo) > 0)
+					{
+						set(dtwFrom, calTooo);
+						set(dtwTo, calFrom);
+						calendar = calTooo;
+						calTooo = calFrom;
+						calFrom = calendar;
+					}
+				}
+				
+				calendar = calTooo;
+				calendar.roll(Calendar.DAY_OF_YEAR, true);				
+				
+				String dateFromData = null;
+				if (dateEarliest && dateFrom) throw new IllegalStateException(String.format("EARLIEST=%B & FROM=%B", dateEarliest, dateFrom));
+				else if (dateEarliest && !dateFrom) dateFromData = ">0"; 
+				else if (!dateEarliest && dateFrom) dateFromData = ">=" + Common.morphDate(dtwFrom.getYear(), dtwFrom.getMonth(), dtwFrom.getDay());
+				else throw new IllegalArgumentException("Please select a starting date.");
+				
+				String dateToData = null;
+				if (dateLatest && dateTo) throw new IllegalStateException(String.format("LATEST=%B & TO=%B", dateLatest, dateTo));
+				else if (dateLatest && !dateTo) dateToData = "<=99999999999999"; 
+				else if (!dateLatest && dateTo) dateToData = "<" + Common.morphDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+				else throw new IllegalArgumentException("Please select an ending date.");
+				
+				System.out.println(dateFromData + " " + dateToData);
+			}
+		}
+		catch(IllegalArgumentException iae)
+		{
+			iae.printStackTrace();
+			MsgBox.show(getShell(), iae.getMessage(), "Invalid input", MsgBoxButtons.OK, MsgBoxIcon.WARNING);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(getShell(), "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+	}
+
+	private void get(Calendar cal, DateTime dtw)
+	{
+		cal.set(Calendar.YEAR, dtw.getYear());
+		cal.set(Calendar.MONTH, dtw.getMonth());
+		cal.set(Calendar.DATE, dtw.getDay());
+	}
+	
+	private void set(DateTime dtw, Calendar cal)
+	{
+		dtw.setYear(cal.get(Calendar.YEAR));
+		dtw.setMonth(cal.get(Calendar.MONTH));
+		dtw.setDay(cal.get(Calendar.DATE));
 	}
 }

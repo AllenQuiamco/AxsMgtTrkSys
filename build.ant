@@ -56,6 +56,7 @@
     	<copy todir="./export/">
 			<fileset dir="./" includes="LICENSE*"/>
 			<fileset dir="./" includes="ABOUT*"/>
+    		<fileset dir="./" includes="CHANGELOG*"/>
 			<fileset dir="./" includes="*.sqlite3"/>
 		</copy>
     	

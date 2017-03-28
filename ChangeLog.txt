@@ -1,0 +1,17 @@
+v0.1.17087.3 - CURRENT
+> Re-worded UI text
+> Re-aligned UI elements
+> Added "Download" button to AssignmentDialog 
+> Implemented persistent window states
+
+v0.1.17087.2
+> Added handling to cancel actions in Receiving tab to delete any created folders 
+> Changed "Save" buttons' text in ReceivingDialog, AssignmentDialog and 
+ProcessingDialog to "Update"
+
+v0.1.17087.1
+???
+
+v0.1.17087.0
+> Initial version
+> Built for beta test on 28 Mar 2017

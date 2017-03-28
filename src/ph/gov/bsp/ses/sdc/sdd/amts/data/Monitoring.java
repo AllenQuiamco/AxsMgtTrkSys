@@ -19,6 +19,9 @@ public class Monitoring implements Cloneable
 	private static final String TABLE_NAME = "MONITORING";
 	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
 	
+	// TODO Add EnteredOn
+	
+	
 	private int id = -1; // 0 is test, any positive is actual data
 	private String folder;
 	private String requestType;

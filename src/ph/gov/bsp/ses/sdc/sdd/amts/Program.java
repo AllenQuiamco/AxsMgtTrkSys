@@ -39,10 +39,11 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 public class Program
 {
-	private static final String VERSION = "v0.1.17087.0";
+	private static final String VERSION = "v0.1.17087.2";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
@@ -191,6 +192,8 @@ public class Program
 //			System.exit(ExitCode.HARD_ABORT);
 						
 			final MainWindow mw = new MainWindow();
+			mw.setNoSettings(!(getSettingsFile().exists()));
+			mw.setWindowState(getSetting("ui.mainwindow.windowstate"));
 			
 			// load settings
 			mw.getTextSqliteDb().setText(getSetting("path.sqlitedb"));
@@ -591,75 +594,103 @@ public class Program
 	 */
 	public static void receive(Shell shell, SelectionEvent buttonSelectedEvent)
 	{
-		FileDialog fd = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
-		fd.setFilterExtensions(Utilities.toArray("*.*"));
-		fd.setText("Select reference files");
-		String output = fd.open();
-		
-		if (output == null) return;
-		
-		String[] files = fd.getFileNames();
-		String base = fd.getFilterPath();
-		
-		// try to create at file server
-		boolean dirMade = false;
-		File dirFileServer = new File(getSetting("path.fileserver"));
-		File targetBase = null;
-		long receivedOn = 0;
-		String folder = null;
-		for (int i = 1; i <= Integer.parseInt(getSetting("data.mkdirtries")); i++)
+		try
 		{
-			receivedOn = System.currentTimeMillis();
-			folder = "" + receivedOn;
-			targetBase = new File(dirFileServer, folder);
-			if (dirMade = targetBase.mkdirs()) break;
-		}
-		
-		if (!dirMade)
-		{
-			MsgBox.show(shell, 
-					String.format("Unable to create folder in %s after %d tries.", 
-							dirFileServer, 
-							getSetting("path.mkdirtries")), 
-							"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-			return;
-		}	
-		
-		File sourceBase = new File(base);
-		for (int i = 0; i < files.length; i++)
-		{
-			File sourceFile = new File(sourceBase, files[i]);
-			File targetFile = new File(targetBase, files[i]);
-			try
+			FileDialog fd = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
+			fd.setFilterExtensions(Utilities.toArray("*.*"));
+			fd.setText("Select reference files");
+			String output = fd.open();
+			
+			if (output == null) return;
+			
+			String[] files = fd.getFileNames();
+			String base = fd.getFilterPath();
+			
+//			StringBuilder sb = new StringBuilder();
+//			for (String file : files)
+//			{
+//				if (sb.length() > 0) sb.append(String.format("%n"));
+//				sb.append(new File(file).getName());
+//			}
+//			MsgBoxResult r = MsgBox.show(shell, String.format("A new entry will be created for the following file%s:%n%n%s%n%nAre you sure you want to continue?", (files.length > 1) ? "s" : "", sb.toString()), "Confirm new entry", MsgBoxButtons.YES_NO, MsgBoxIcon.QUESTION);
+//			if (!r.isYes()) return;
+			
+			// try to create at file server
+			boolean dirMade = false;
+			File dirFileServer = new File(getSetting("path.fileserver"));
+			File targetBase = null;
+			long receivedOn = 0;
+			String folder = null;
+			int tries = Integer.parseInt(getSetting("data.mkdirtries"));
+			for (int i = 1; i <= tries; i++)
 			{
-				FileUtils.copyFile(sourceFile, targetFile);
+				receivedOn = System.currentTimeMillis();
+				folder = "" + receivedOn;
+				targetBase = new File(dirFileServer, folder);
+				if (dirMade = targetBase.mkdirs()) break;
 			}
-			catch (IOException e)
+			
+			if (!dirMade)
 			{
-				MsgBox.show(shell, 
-						String.format("Unable to copy file \"%s\" to \"%s\".", 
-								sourceFile.getAbsolutePath(), 
-								targetFile.getAbsolutePath()), 
-								"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-				e.printStackTrace();
-				return;
+				throw new IOException(
+						String.format(
+								"Unable to create folder in %s after %d tries.", 
+								dirFileServer, 
+								getSetting("path.mkdirtries")));
+			}	
+			
+			boolean error = false;
+			
+			File sourceBase = new File(base);
+			for (int i = 0; i < files.length; i++)
+			{
+				File sourceFile = new File(sourceBase, files[i]);
+				File targetFile = new File(targetBase, files[i]);
+				try
+				{
+					FileUtils.copyFile(sourceFile, targetFile);
+				}
+				catch (IOException e)
+				{
+					error = true;
+					e.printStackTrace();
+					MsgBox.show(shell, 
+							String.format("Unable to copy file \"%s\" to \"%s\".", 
+									sourceFile.getAbsolutePath(), 
+									targetFile.getAbsolutePath()), 
+									"Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+				}
+			}
+			
+			if (!error)
+			{
+				Monitoring item = new Monitoring();
+				item.setFolder(folder);
+				item.setReceivedOn(new Date(receivedOn));
+				item.setReceivedBy(Program.USER);
+				item.setStatus("NEW");
+				
+				ReceivingDialog edit = new ReceivingDialog(shell, SWT.NONE);
+				edit.setItem(item);
+				
+				if (edit.open())
+				{
+					Monitoring edited = edit.getEditedItem();
+					error = !newEntry(shell, edited);
+				} 
+				else error = true;
+			}
+			
+			if (error)
+			{
+				// Delete folder
+				FileUtils.deleteQuietly(targetBase);
 			}
 		}
-		
-		// reaching here means the copy is successful
-		
-		Monitoring item = new Monitoring();
-		item.setFolder(folder);
-		item.setReceivedOn(new Date(receivedOn));
-		item.setReceivedBy(Program.USER);
-		item.setStatus("NEW");
-		
-		ReceivingDialog edit = new ReceivingDialog(shell, SWT.NONE);
-		edit.setItem(item);
-		if (edit.open())
-		{
-			Monitoring edited = edit.getEditedItem();
-			newEntry(shell, edited);
+		catch (IOException e)
+		{ 
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to create new entry.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 	}
 

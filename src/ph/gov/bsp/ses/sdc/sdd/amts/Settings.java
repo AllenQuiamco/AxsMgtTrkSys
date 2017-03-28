@@ -96,7 +96,7 @@ public class Settings
 			{
 				printer = new PrintWriter(file);
 				
-				printer.println("; This is a program-generated file, manually editing this file is not recommended");
+				printer.println("; This is a procedurally-generated file, manually editing this file is not recommended");
 				
 				for (String key : retobj.data.keySet())
 				{

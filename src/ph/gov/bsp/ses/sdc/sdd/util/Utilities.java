@@ -137,4 +137,10 @@ public final class Utilities
 			e.printStackTrace();
 		}
 	}
+
+	public static String getArrayItem(String[] array, int index)
+	{
+		if (index >= array.length) return null;
+		else return array[index];
+	}
 }

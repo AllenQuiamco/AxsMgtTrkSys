@@ -191,7 +191,7 @@ public class ReceivingComposite extends Composite
 		
 		TableColumn tblclmnType = new TableColumn(table, SWT.NONE);
 		tblclmnType.setWidth(100);
-		tblclmnType.setText("Type");
+		tblclmnType.setText("Request type");
 		
 		TableColumn tblclmnFrom = new TableColumn(table, SWT.NONE);
 		tblclmnFrom.setWidth(100);
@@ -203,7 +203,7 @@ public class ReceivingComposite extends Composite
 		
 		TableColumn tblclmnReceivedby = new TableColumn(table, SWT.NONE);
 		tblclmnReceivedby.setWidth(100);
-		tblclmnReceivedby.setText("ReceivedBy");
+		tblclmnReceivedby.setText("Received by");
 		
 		TableColumn tblclmnRemarks = new TableColumn(table, SWT.NONE);
 		tblclmnRemarks.setWidth(100);

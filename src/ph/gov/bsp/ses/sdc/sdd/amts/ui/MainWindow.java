@@ -42,12 +42,12 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
  */
 public class MainWindow
 {
-	
 	/**
 	 * An instance's reference to itself. Useful with anonymous inner types.
 	 */
 	private MainWindow self;
 	private String title;
+	private boolean noSettings;
 	
 	private Shell shell;
 	private Display display;
@@ -106,11 +106,18 @@ public class MainWindow
 			@Override
 			public void shellClosed(ShellEvent e)
 			{
-				System.out.println("MINIMIZED " + shell.getMinimized());
-				System.out.println("MAXIMIZED " + shell.getMaximized());
-				System.out.println("LOCATION " + shell.getLocation());
-				System.out.println("SIZE " + shell.getSize());
-				e.doit = true; // TODO Save window position information
+				String windowState = getWindowState();
+				Program.setSetting("ui.mainwindow.windowstate", windowState);
+				e.doit = true;
+			}
+			
+			@Override
+			public void shellActivated(ShellEvent e) 
+			{
+				if (noSettings)
+				{
+					System.out.println("NOSETTINGS"); // TODO Implement this
+				}
 			}
 		});
 		
@@ -463,5 +470,77 @@ public class MainWindow
 	public void setTitleVersion(String version)
 	{
 		shell.setText(String.format("%s [%s]", title, version));
+	}
+
+	public void setNoSettings(boolean noSettings)
+	{
+		this.noSettings = noSettings;
+	}
+
+	public void setWindowState(String string)
+	{
+		if (Utilities.isNullOrBlank(string)) return;
+		
+		String[] split = string.trim().split("\\s+");
+		String state = Utilities.getArrayItem(split, 0); if (state == null) state = ""; state = state.toUpperCase();
+		String posX = Utilities.getArrayItem(split, 1);
+		String posY = Utilities.getArrayItem(split, 2);
+		String sizeX = Utilities.getArrayItem(split, 3);
+		String sizeY = Utilities.getArrayItem(split, 4);
+		
+		if (state.equals("MAXIMIZED"))
+		{
+			shell.setMaximized(true);
+			//shell.setMinimized(false);
+		}
+		else if (state.equals("RESTORED"))
+		{
+			shell.setMaximized(false);
+			shell.setMinimized(false);
+			
+			if ((posX != null) && (posY != null))
+			{
+				try
+				{
+					int x = Integer.parseInt(posX);
+					int y = Integer.parseInt(posY);
+					
+					if (x < 0) x = 0;
+					if (y < 0) y = 0;
+					
+					shell.setLocation(new Point(x, y));
+				}
+				catch (NumberFormatException e) { }
+			}
+			
+			if ((sizeX != null) && (sizeY != null))
+			{
+				try
+				{
+					int x = Integer.parseInt(sizeX);
+					int y = Integer.parseInt(sizeY);
+					
+					if (x < 0) x = 0;
+					if (y < 0) y = 0;
+					
+					shell.setSize(x, y);
+				}
+				catch (NumberFormatException e) { }
+			}
+		}
+	}
+	
+	public String getWindowState()
+	{
+		boolean max = shell.getMaximized();
+		boolean min = shell.getMinimized();
+		Point location = shell.getLocation();
+		Point size = shell.getSize();
+		String state = "";
+		if (max && min) state = "MAXIMIZED";
+		else if(max && !min) state = "MAXIMIZED";
+		else if(!max && min) state = "RESTORED";
+		else state = "RESTORED";
+		return String.format("%s %d %d %d %d", state, location.x, location.y, size.x, size.y);
 	}
 }

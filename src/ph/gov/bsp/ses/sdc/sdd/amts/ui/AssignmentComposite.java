@@ -206,11 +206,11 @@ public class AssignmentComposite extends Composite
 		
 		TableColumn tblclmnType = new TableColumn(table, SWT.NONE);
 		tblclmnType.setWidth(100);
-		tblclmnType.setText("Type");
+		tblclmnType.setText("Request type");
 		
 		TableColumn tblclmnFrom = new TableColumn(table, SWT.NONE);
 		tblclmnFrom.setWidth(100);
-		tblclmnFrom.setText("From");
+		tblclmnFrom.setText("Requested by");
 		
 		TableColumn tblclmnReceivedOn = new TableColumn(table, SWT.NONE);
 		tblclmnReceivedOn.setWidth(100);
