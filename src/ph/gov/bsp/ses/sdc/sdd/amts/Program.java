@@ -42,6 +42,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
 
 public class Program
 {
+	private static final String VERSION = "v0.1.17087.0";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
@@ -195,6 +196,7 @@ public class Program
 			mw.getTextSqliteDb().setText(getSetting("path.sqlitedb"));
 			mw.getTextFileServer().setText(getSetting("path.fileserver"));
 			mw.getTextLocalCopy().setText(getSetting("path.localcopy"));
+			mw.setTitleVersion(VERSION);
 			
 			// load about page
 			mw.setInfoUrl(Utilities.getAbsolutePath("ABOUT.html"));

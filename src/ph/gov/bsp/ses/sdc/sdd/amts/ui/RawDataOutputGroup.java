@@ -1,6 +1,7 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -373,42 +374,41 @@ public class RawDataOutputGroup extends Group
 	
 	protected void btnCreate_widgetSelected(SelectionEvent selectionEvent)
 	{
-		try
-		{
-			String table = null;
-			boolean monitoring = btnMonitoring.getSelection();
-			boolean log = btnLog.getSelection(); 
-			if (monitoring && log) throw new IllegalStateException(String.format("MONITORING=%B & LOG=%B", monitoring, log));
-			else if (monitoring && !log) table = "MONITORING";
-			else if (!monitoring && log) table = "LOG";
-			else throw new IllegalArgumentException("Please select a table.");
-			
-			String range = null;
-			boolean all = btnAll.getSelection();
-			boolean date = btnDate.getSelection();
-			boolean row = btnRow.getSelection();
-			if (all && !date && !row) range = "ALL";
-			else if (!all && date && !row) range = "DATE";
-			else if (!all && !date && row) range = "ROW";
-			else if (!all && !date && !row) throw new IllegalArgumentException("Please select a range.");
-			else throw new IllegalStateException(String.format("ALL=%B & DATE=%B & ROW=%B", all, date, row));
-			
-			if (date)
-			{
-				String dateFromData = null;
-				boolean dateEarliest = btnDateEarliest.getSelection();
-				boolean dateFrom = btnDateFrom.getSelection();
-				if (dateEarliest && dateFrom) throw new IllegalStateException(String.format("EARLIEST=%B & FROM=%B", dateEarliest, dateFrom));
-				else if (dateEarliest && !dateFrom) dateFromData = ">0"; 
-				else if (!dateEarliest && dateFrom) dateFromData = ">=" + Common.morphDate(dtwFrom.getYear(), dtwFrom.getMonth(), dtwFrom.getDay());
-				else throw new IllegalArgumentException("Please select a starting date.");
-				
-				Calendar calendar = Calendar.getInstance();
-				calendar.set(dtwTo.getYear(), dtwTo.getMonth(), dtwTo.getDay());
-				calendar.roll(Calendar.DAY_OF_MONTH, true);
-				
-				// TODO Implement this
-				
+		MsgBox.show(getShell(), String.format("This feature is not yet implemented.%n%nRawDataOutputGroup.btnCreate_widgetSelected(SelectionEvent)"));
+//		try
+//		{
+//			String table = null;
+//			boolean monitoring = btnMonitoring.getSelection();
+//			boolean log = btnLog.getSelection(); 
+//			if (monitoring && log) throw new IllegalStateException(String.format("MONITORING=%B & LOG=%B", monitoring, log));
+//			else if (monitoring && !log) table = "MONITORING";
+//			else if (!monitoring && log) table = "LOG";
+//			else throw new IllegalArgumentException("Please select a table.");
+//			
+//			String range = null;
+//			boolean all = btnAll.getSelection();
+//			boolean date = btnDate.getSelection();
+//			boolean row = btnRow.getSelection();
+//			if (all && !date && !row) range = "ALL";
+//			else if (!all && date && !row) range = "DATE";
+//			else if (!all && !date && row) range = "ROW";
+//			else if (!all && !date && !row) throw new IllegalArgumentException("Please select a range.");
+//			else throw new IllegalStateException(String.format("ALL=%B & DATE=%B & ROW=%B", all, date, row));
+//			
+//			if (date)
+//			{
+//				String dateFromData = null;
+//				boolean dateEarliest = btnDateEarliest.getSelection();
+//				boolean dateFrom = btnDateFrom.getSelection();
+//				if (dateEarliest && dateFrom) throw new IllegalStateException(String.format("EARLIEST=%B & FROM=%B", dateEarliest, dateFrom));
+//				else if (dateEarliest && !dateFrom) dateFromData = ">0"; 
+//				else if (!dateEarliest && dateFrom) dateFromData = ">=" + Common.morphDate(dtwFrom.getYear(), dtwFrom.getMonth(), dtwFrom.getDay());
+//				else throw new IllegalArgumentException("Please select a starting date.");
+//				
+//				Calendar calendar = Calendar.getInstance();
+//				calendar.set(dtwTo.getYear(), dtwTo.getMonth(), dtwTo.getDay());
+//				calendar.roll(Calendar.DAY_OF_MONTH, true);
+//				
 //				String dateToData = null;
 //				boolean dateLatest = btnDateLatest.getSelection();
 //				boolean dateTo = btnDateTo.getSelection();
@@ -416,16 +416,16 @@ public class RawDataOutputGroup extends Group
 //				else if (dateLatest && !dateTo) dateToData = "<=99999999999999"; 
 //				else if (!dateLatest && dateTo) dateToData = "<" + Common.morphDate(dtwTo.setd);
 //				else throw new IllegalArgumentException("Please select an ending date.");
-			}
-		}
-		catch(IllegalArgumentException iae)
-		{
-			MsgBox.show(getShell(), iae.getMessage(), "Invalid input", MsgBoxButtons.OK, MsgBoxIcon.WARNING);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			MsgBox.show(getShell(), "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
-		}
+//			}
+//		}
+//		catch(IllegalArgumentException iae)
+//		{
+//			MsgBox.show(getShell(), iae.getMessage(), "Invalid input", MsgBoxButtons.OK, MsgBoxIcon.WARNING);
+//		}
+//		catch (Exception e)
+//		{
+//			e.printStackTrace();
+//			MsgBox.show(getShell(), "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+//		}
 	}
 }

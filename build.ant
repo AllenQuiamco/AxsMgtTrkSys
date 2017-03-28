@@ -50,7 +50,7 @@
     		</zipfileset>
         </jar>
     	
-    	<!--<delete file="./export/libs.jar"/>-->
+    	<delete file="./export/libs.jar"/>
         
     	<!--Copy other files-->
     	<copy todir="./export/">

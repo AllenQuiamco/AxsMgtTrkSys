@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="build" name="build amaterasu src">
+	
+	<!--ANT 1.7 is required-->
+    <target name="build">
+    	
+    	<mkdir dir="export"/>
+    	
+    	<zip destfile="./export/amts-src.zip">
+    		<fileset dir="./src"/>
+    	</zip>
+    	
+	</target>
+	
+</project>

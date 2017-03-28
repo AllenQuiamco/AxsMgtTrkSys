@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="build" name="build amaterasu">
+<project default="build" name="build amaterasu x64">
 
 	<property name="extlib" value="../../lib" />
 	<property name="EclipsePlugins" value="../../bin/plugins" />
@@ -50,7 +50,7 @@
     		</zipfileset>
         </jar>
     	
-    	<!--<delete file="./export/libs.jar"/>-->
+    	<delete file="./export/libs.jar"/>
         
     	<!--Copy other files-->
     	<copy todir="./export/">

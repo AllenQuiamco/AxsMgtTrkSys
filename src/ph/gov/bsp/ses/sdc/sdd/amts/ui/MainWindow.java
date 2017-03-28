@@ -47,6 +47,7 @@ public class MainWindow
 	 * An instance's reference to itself. Useful with anonymous inner types.
 	 */
 	private MainWindow self;
+	private String title;
 	
 	private Shell shell;
 	private Display display;
@@ -66,6 +67,7 @@ public class MainWindow
 		display = Display.getDefault();
 		createContents();
 		self = this;
+		title = shell.getText();
 	}
 	
 	/**
@@ -456,5 +458,10 @@ public class MainWindow
 	{
 		this.cmpInfoBrowser.setUrl(string);
 		
+	}
+
+	public void setTitleVersion(String version)
+	{
+		shell.setText(String.format("%s [%s]", title, version));
 	}
 }
