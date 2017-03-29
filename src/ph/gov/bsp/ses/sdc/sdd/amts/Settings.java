@@ -133,6 +133,7 @@ public class Settings
 		defaults.put("path.localcopy", ".\\");
 		defaults.put("data.busytimeoutmsecs", "30000");
 		defaults.put("data.mkdirtries", "100");
+		defaults.put("data.displaydelta", "19");
 		defaults.put("ui.mainwindow.windowstate", "RESTORED");
 		defaults.put("ui.receivingdialog.windowstate", "RESTORED");
 		defaults.put("ui.assignmentdialog.windowstate", "RESTORED");

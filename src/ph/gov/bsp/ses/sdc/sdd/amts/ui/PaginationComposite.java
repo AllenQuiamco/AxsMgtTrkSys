@@ -11,18 +11,19 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+
 public class PaginationComposite extends Composite
 {
-	static final int DEFAULT_ROW_START = 1;
-	static final int DEFAULT_ROW_END = 20;
-	static final int DEFAULT_ROW_DELTA = DEFAULT_ROW_END - DEFAULT_ROW_START;
+	public static final int DEFAULT_ROW_START = 1;
+	public static final int DEFAULT_ROW_END = 20;
+	public static final int DEFAULT_ROW_DELTA = Math.max(DEFAULT_ROW_END - DEFAULT_ROW_START, Integer.parseInt(Program.getSetting("data.displaydelta"))); // XXX Direct reference to Program.getSetting(String)
 	
 	private int start;
 	private int end;

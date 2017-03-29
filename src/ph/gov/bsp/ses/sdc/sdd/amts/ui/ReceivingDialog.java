@@ -9,9 +9,15 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.Program;
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Common;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;
@@ -23,6 +29,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.Realm;
+import org.eclipse.core.databinding.observable.value.DateAndTimeObservableValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
@@ -33,6 +40,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 
@@ -94,6 +103,7 @@ public class ReceivingDialog extends Dialog
 	public boolean open()
 	{
 		createContents();
+		setWindowState(Program.getSetting("ui.receivingdialog.windowstate"));
 		shell.open();
 		shell.layout();
 		Display display = getParent().getDisplay();
@@ -118,6 +128,15 @@ public class ReceivingDialog extends Dialog
 		shell.setSize(450, 326);
 		shell.setText("Receiving Details");
 		shell.setLayout(new FormLayout());
+		shell.addShellListener(new ShellAdapter()
+		{
+			@Override
+			public void shellClosed(ShellEvent e)
+			{
+				String windowState = getWindowState();
+				Program.setSetting("ui.receivingdialog.windowstate", windowState);
+			}
+		});
 		
 		cmpSave = new Composite(shell, SWT.NONE);
 		FormData fd_cmpSave = new FormData();
@@ -127,9 +146,22 @@ public class ReceivingDialog extends Dialog
 		cmpSave.setLayout(new RowLayout(SWT.HORIZONTAL));
 		
 		btnSave = new Button(cmpSave, SWT.NONE);
-		btnSave.addSelectionListener(new SelectionAdapter() {
+		btnSave.addSelectionListener(new SelectionAdapter() 
+		{
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void widgetSelected(SelectionEvent e) 
+			{
+				if (!itemEditable.getRemarks().startsWith(item.getRemarks()))
+				{
+					MsgBoxResult r = MsgBox.show(shell,
+							String.format("You have edited a previous remark.%n%nAre you sure you want proceed with the changes?"),
+							"Confirm",
+							MsgBoxButtons.YES_NO,
+							MsgBoxIcon.WARNING);
+					
+					if (!r.isYes()) return;
+				}
+				
 				result = true;
 				shell.close();
 			}
@@ -175,16 +207,14 @@ public class ReceivingDialog extends Dialog
 		lblFolder.setLayoutData(fd_lblFolder);
 		lblFolder.setText("Folder");
 		
-		dtwReceivedOnDate = new DateTime(cmpDetails, SWT.BORDER);
-		dtwReceivedOnDate.setEnabled(false);
+		dtwReceivedOnDate = new DateTime(cmpDetails, SWT.BORDER | SWT.DROP_DOWN);
 		FormData fd_dtwReceivedOnDate = new FormData();
 		fd_dtwReceivedOnDate.right = new FormAttachment(0, 180);
 		fd_dtwReceivedOnDate.top = new FormAttachment(0, 56);
 		fd_dtwReceivedOnDate.left = new FormAttachment(0, 80);
 		dtwReceivedOnDate.setLayoutData(fd_dtwReceivedOnDate);
 		
-		dtwReceivedOnTime = new DateTime(cmpDetails, SWT.BORDER | SWT.TIME);
-		dtwReceivedOnTime.setEnabled(false);
+		dtwReceivedOnTime = new DateTime(cmpDetails, SWT.BORDER | SWT.DROP_DOWN | SWT.TIME);
 		FormData fd_dtwReceivedOnTime = new FormData();
 		fd_dtwReceivedOnTime.left = new FormAttachment(dtwReceivedOnDate, 3);
 		fd_dtwReceivedOnTime.right = new FormAttachment(dtwReceivedOnDate, 103, SWT.RIGHT);
@@ -256,7 +286,7 @@ public class ReceivingDialog extends Dialog
 		fd_lblType.right = new FormAttachment(txtRequestType, -5);
 		fd_lblType.top = new FormAttachment(0, 112);
 		lblType.setLayoutData(fd_lblType);
-		lblType.setText("Request Type");
+		lblType.setText("Request type");
 		
 		Label lblFrom = new Label(cmpDetails, SWT.NONE);
 		FormData fd_lblFrom = new FormData();
@@ -335,8 +365,8 @@ public class ReceivingDialog extends Dialog
 		
 		initDataBindings();
 		
-		// TODO EnteredOn
 		// TODO Detect remarks startsWith
+		
 	}
 	
 	protected DataBindingContext initDataBindings()
@@ -351,12 +381,11 @@ public class ReceivingDialog extends Dialog
 		IObservableValue folderItemObserveValue = PojoProperties.value("folder").observe(itemEditable);
 		bindingContext.bindValue(observeTextTxtFolderObserveWidget, folderItemObserveValue, null, null);
 		//
-		IObservableValue observeSelectionDtwReceivedOnObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnDate);
+		IObservableValue observeSelectionDtwReceivedOnDateObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnDate);
+		IObservableValue observeSelectionDtwReceivedOnTimeObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnTime);
+		IObservableValue observeSelectionDtwReceivedOnObserveWidget = new DateAndTimeObservableValue(observeSelectionDtwReceivedOnDateObserveWidget, observeSelectionDtwReceivedOnTimeObserveWidget) ;
 		IObservableValue receivedOnItemEditableObserveValue = PojoProperties.value("receivedOn").observe(itemEditable);
 		bindingContext.bindValue(observeSelectionDtwReceivedOnObserveWidget, receivedOnItemEditableObserveValue, null, null);
-		//
-		IObservableValue observeSelectionDtwReceivedOnTimeObserveWidget = WidgetProperties.selection().observe(dtwReceivedOnTime);
-		bindingContext.bindValue(observeSelectionDtwReceivedOnTimeObserveWidget, receivedOnItemEditableObserveValue, null, null);
 		//
 		IObservableValue observeTextTxtReceivedByObserveWidget = WidgetProperties.text(SWT.Modify).observe(txtReceivedBy);
 		IObservableValue receivedByItemEditableObserveValue = PojoProperties.value("receivedBy").observe(itemEditable);
@@ -398,6 +427,18 @@ public class ReceivingDialog extends Dialog
 		List<Log> logs = new LinkedList<Log>();
 		
 		Log log = null;
+		
+		if (item.getReceivedOn().compareTo(itemEditable.getReceivedOn()) != 0)
+		{
+			log = new Log();
+			log.setAction("update");
+			log.setTableName("MONITORING");
+			log.setFieldName("ReceivedOn");
+			log.setRowId(item.getId());
+			log.setOldValue(Common.morphDate(item.getReceivedOn()));
+			log.setNewValue(Common.morphDate(itemEditable.getReceivedOn()));
+			logs.add(log);
+		}
 		
 		if (!Utilities.equals(item.getRequestType(), itemEditable.getRequestType()))
 		{

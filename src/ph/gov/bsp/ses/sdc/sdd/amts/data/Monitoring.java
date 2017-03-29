@@ -1,5 +1,6 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.data;
 
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
@@ -7,7 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -17,13 +20,11 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 public class Monitoring implements Cloneable
 {
 	private static final String TABLE_NAME = "MONITORING";
-	private static final String TABLE_COLS = "`ID`,`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
-	
-	// TODO Add EnteredOn
-	
-	
+	private static final String TABLE_COLS = "`ID`,`Folder`,`EnteredOn`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`AssignedBy`,`AssignedTo`,`AssignedOn`,`ProcessedBy`,`ProcessedOn`,`ResolvedOn`,`Remarks`";
+		
 	private int id = -1; // 0 is test, any positive is actual data
 	private String folder;
+	private Long enteredOn;
 	private String requestType;
 	private String requestedBy;
 	private Long receivedOn;
@@ -44,6 +45,7 @@ public class Monitoring implements Cloneable
 		
 		clone.id = this.id;
 		clone.folder = this.folder;
+		clone.enteredOn = this.enteredOn;
 		clone.requestType = this.requestType;
 		clone.requestedBy = this.requestedBy;
 		clone.receivedOn = this.receivedOn;
@@ -78,6 +80,16 @@ public class Monitoring implements Cloneable
 	public void setFolder(String folder)
 	{
 		this.folder = folder;
+	}
+
+	public Date getEnteredOn()
+	{
+		return Common.getDate(enteredOn);
+	}
+
+	public void setEnteredOn(Date value)
+	{
+		this.enteredOn = Common.morphDate(value);
 	}
 
 	public String getRequestType()
@@ -218,6 +230,7 @@ public class Monitoring implements Cloneable
 			item = new Monitoring();
 			item.id = random.nextInt(100);
 			item.folder = String.format("folder%08x", random.nextInt());
+			item.setEnteredOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
 			item.requestType = String.format("requestType%08x", random.nextInt());
 			item.requestedBy = String.format("requestedBy%08x", random.nextInt());
 			item.setReceivedOn(new Date((117 - 20) + random.nextInt(20), random.nextInt(12), random.nextInt(28) + 1));
@@ -236,7 +249,7 @@ public class Monitoring implements Cloneable
 		return retobj;
 	}
 
-	private static String buildWhere(String ... strings)
+	private static String buildWhere(String ... strings) // TODO Transfer method to Common
 	{
 		if ((strings.length % 2) != 0) throw new IllegalArgumentException("Parameter array does not have an even number of elements.");
 		
@@ -251,9 +264,9 @@ public class Monitoring implements Cloneable
 			
 			if (Utilities.isNullOrBlank(part)) continue;
 			
-			if (sb.length() > 0) sb.append(" OR ");
+			if (sb.length() > 0) sb.append(" AND ");
 			
-			sb.append(part);
+			sb.append(String.format("(%s)",part));
 		}
 		
 		if (sb.length() > 0) sb.insert(0, "WHERE ");
@@ -261,7 +274,7 @@ public class Monitoring implements Cloneable
 		return sb.toString();
 	}
 	
-	private static String buildWhere(String column, String filter)
+	private static String buildWhere(String column, String filter) // TODO Transfer method to Common
 	{
 		if (Utilities.isNullOrBlank(column)) return "";
 		if (Utilities.isNullOrBlank(filter)) return "";
@@ -382,16 +395,17 @@ public class Monitoring implements Cloneable
 		try
 		{
 			String insertNew = String.format("INSERT INTO %s ", TABLE_NAME);
-			insertNew += "(`Folder`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`Remarks`) ";
-			insertNew += "VALUES (?,?,?,?,?,?,?)";
+			insertNew += "(`Folder`,`EnteredOn`,`RequestType`,`RequestedBy`,`ReceivedOn`,`ReceivedBy`,`Status`,`Remarks`) ";
+			insertNew += "VALUES (?,?,?,?,?,?,?,?)";
 			insert = conn.prepareStatement(insertNew);
 			insert.setString(1, item.folder);
-			insert.setString(2, item.requestType);
-			insert.setString(3, item.requestedBy);
-			insert.setLong(4, item.receivedOn);
-			insert.setString(5,  item.receivedBy);
-			insert.setString(6, item.status);
-			insert.setString(7, item.remarks);
+			insert.setLong(2, item.enteredOn);
+			insert.setString(3, item.requestType);
+			insert.setString(4, item.requestedBy);
+			insert.setLong(5, item.receivedOn);
+			insert.setString(6,  item.receivedBy);
+			insert.setString(7, item.status);
+			insert.setString(8, item.remarks);
 			
 			int result = insert.executeUpdate();
 			if (result < 1) throw new SQLException("No rows were inserted.");
@@ -480,6 +494,98 @@ public class Monitoring implements Cloneable
 		String where = buildWhere("Status", filterStatus, "RequestType", filterType, "AssignedTo", filterAssignedTo);
 		
 		return getRows(conn, where, rowStart, rowEnd);
+	}
+
+	public static String[] getFilterItems(Connection conn, String column) throws SQLException
+	{
+		column = Common.cleanColumnName(column);
+		Statement select = conn.createStatement();
+		ResultSet result = select.executeQuery(
+				String.format("SELECT DISTINCT `%s` FROM `%s` ORDER BY `%s` ASC", 
+						column, 
+						TABLE_NAME,
+						column));
+		
+		List<String> items = new ArrayList<String>();
+		
+		while (result.next())
+		{
+			try
+			{
+				String item = "";
+				Object data = result.getObject(1);
+				if (data != null) item = data.toString();
+				if (!Utilities.isNullOrBlank(item)) items.add(item);
+			}
+			catch (Exception e)
+			{
+				// Silently ignore 
+			}
+		}
+		
+		String[] retobj = new String[items.size()];
+		return items.toArray(retobj);
+	}
+
+	public static boolean createOutputMonitoringRaw(Connection conn, Filter filter, PrintWriter pw) throws SQLException
+	{
+		boolean success = false;
+		String header = TABLE_COLS.replace("`", "\"");
+		String where = "";
+		String filterBuild = filter.build();
+		if (!Utilities.isNullOrBlank(filterBuild)) where = "WHERE " + filterBuild;
+		
+		List<Monitoring> items = getRows(conn, where, "", "");
+		if (items.size() > 0)
+		{
+			pw.println(header);
+			
+			for (Monitoring item : items)
+			{
+				write(item, pw);
+			}
+			
+			success = true;
+		}
+		
+		return success;
+	}
+
+	private static void write(Monitoring item, PrintWriter pw)
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(String.format("%d", item.getId())); 
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getFolder())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvDate(item.getEnteredOn())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getRequestType())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getRequestedBy())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvDate(item.getReceivedOn())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getReceivedBy())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getStatus())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getAssignedBy())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getAssignedTo())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvDate(item.getAssignedOn())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getProcessedBy())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvDate(item.getProcessedOn())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvDate(item.getResolvedOn())));
+		sb.append(",");
+		sb.append(String.format("%s", Common.morphToCsvString(item.getRemarks())));
+		
+		pw.println(sb.toString());
 	}
 	
 	

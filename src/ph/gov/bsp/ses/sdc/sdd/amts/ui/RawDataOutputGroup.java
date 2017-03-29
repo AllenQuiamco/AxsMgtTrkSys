@@ -1,6 +1,5 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
-import java.sql.Date;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -29,6 +28,12 @@ import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
 
+/**
+ * @deprecated Use {@link RawMonitoringOutputGroup} instead.
+ * @author Lee
+ *
+ */
+@Deprecated
 public class RawDataOutputGroup extends Group
 {
 	private Group grpTable;

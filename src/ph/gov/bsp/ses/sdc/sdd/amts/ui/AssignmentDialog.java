@@ -16,6 +16,8 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
@@ -38,6 +40,10 @@ import ph.gov.bsp.ses.sdc.sdd.amts.data.Common;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 public class AssignmentDialog extends Dialog
 {
@@ -104,6 +110,7 @@ public class AssignmentDialog extends Dialog
 	public boolean open()
 	{
 		createContents();
+		setWindowState(Program.getSetting("ui.assignmentdialog.windowstate"));
 		shell.open();
 		shell.layout();
 		Display display = getParent().getDisplay();
@@ -128,6 +135,15 @@ public class AssignmentDialog extends Dialog
 		shell.setSize(450, 326);
 		shell.setText("Assignment Details");
 		shell.setLayout(new FormLayout());
+		shell.addShellListener(new ShellAdapter()
+		{
+			@Override
+			public void shellClosed(ShellEvent e)
+			{
+				String windowState = getWindowState();
+				Program.setSetting("ui.assignmentdialog.windowstate", windowState);
+			}
+		});
 		
 		cmpSave = new Composite(shell, SWT.NONE);
 		FormData fd_cmpSave = new FormData();
@@ -142,6 +158,17 @@ public class AssignmentDialog extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
+				if (!itemEditable.getRemarks().startsWith(item.getRemarks()))
+				{
+					MsgBoxResult r = MsgBox.show(shell,
+							String.format("You have edited a previous remark.%n%nAre you sure you want proceed with the changes?"),
+							"Confirm",
+							MsgBoxButtons.YES_NO,
+							MsgBoxIcon.WARNING);
+					
+					if (!r.isYes()) return;
+				}
+				
 				result = true;
 				shell.close();
 			}

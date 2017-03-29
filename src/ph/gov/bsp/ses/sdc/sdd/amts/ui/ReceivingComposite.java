@@ -189,6 +189,10 @@ public class ReceivingComposite extends Composite
 		tblclmnFolder.setWidth(100);
 		tblclmnFolder.setText("Folder");
 		
+		TableColumn tblclmnEnteredOn = new TableColumn(table, SWT.NONE);
+		tblclmnEnteredOn.setWidth(100);
+		tblclmnEnteredOn.setText("Entered on");
+		
 		TableColumn tblclmnType = new TableColumn(table, SWT.NONE);
 		tblclmnType.setWidth(100);
 		tblclmnType.setText("Request type");
@@ -264,7 +268,15 @@ public class ReceivingComposite extends Composite
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm a");
 		
-		item.setText(Utilities.toArray(String.format("%d", row.getId()), row.getFolder(), row.getRequestType(), row.getRequestedBy(), (row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), row.getReceivedBy(), row.getRemarks()));
+		item.setText(Utilities.toArray(
+				String.format("%d", row.getId()), 
+				row.getFolder(), 
+				(row.getEnteredOn() == null) ? "" : formatter.format(row.getEnteredOn()),
+				row.getRequestType(), 
+				row.getRequestedBy(), 
+				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+				row.getReceivedBy(), 
+				row.getRemarks().replace(String.format("%n"), " ")));
 	}
 	
 	public void displayEmpty()

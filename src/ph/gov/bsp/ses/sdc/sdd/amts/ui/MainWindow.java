@@ -33,6 +33,7 @@ import org.eclipse.swt.layout.RowLayout;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+import org.eclipse.swt.custom.ScrolledComposite;
 
 /**
  * The main window of the application.
@@ -62,12 +63,23 @@ public class MainWindow
 	private AssignmentComposite xcmpAssignment;
 	private ProcessingComposite xcmpProcessing;
 	
+	private RawMonitoringOutputGroup xgrpRawMonitoringOutput;
+	
+	/**
+	 * @wbp.parser.constructor
+	 */
 	public MainWindow()
 	{
-		display = Display.getDefault();
+		this(Display.getDefault());
+	}
+	
+	public MainWindow(Display display)
+	{
+		this.display = display; 
 		createContents();
 		self = this;
 		title = shell.getText();
+		setWindowState(Program.getSetting("ui.mainwindow.windowstate"));
 	}
 	
 	/**
@@ -92,9 +104,9 @@ public class MainWindow
 	protected void createContents()
 	{
 		shell = new Shell();
-		shell.setMinimumSize(new Point(500, 400));
+		shell.setMinimumSize(new Point(603, 400));
 		shell.setImage(SWTResourceManager.getImage(MainWindow.class, "/ph/gov/bsp/ses/sdc/sdd/amts/ui/rsx/java-16x16-32bit.png"));
-		shell.setSize(500, 400);
+		shell.setSize(603, 400);
 		shell.setText("Access Management Tracking System");
 		FillLayout fl_shell = new FillLayout(SWT.VERTICAL);
 		fl_shell.spacing = 1;
@@ -108,7 +120,6 @@ public class MainWindow
 			{
 				String windowState = getWindowState();
 				Program.setSetting("ui.mainwindow.windowstate", windowState);
-				e.doit = true;
 			}
 			
 			@Override
@@ -149,8 +160,11 @@ public class MainWindow
 		tabInfo.setControl(cmpInfo);
 		cmpInfo.setLayout(new FormLayout());
 		
-		Composite cmpInfoUser = new Composite(cmpInfo, SWT.NONE);
-		cmpInfoUser.setLayout(new GridLayout(2, false));
+		Composite cmpInfoUser = new Composite(cmpInfo, SWT.BORDER);
+		GridLayout gl_cmpInfoUser = new GridLayout(2, false);
+		gl_cmpInfoUser.marginWidth = 3;
+		gl_cmpInfoUser.marginHeight = 3;
+		cmpInfoUser.setLayout(gl_cmpInfoUser);
 		FormData fd_cmpInfoUser = new FormData();
 		fd_cmpInfoUser.top = new FormAttachment(0);
 		fd_cmpInfoUser.left = new FormAttachment(0);
@@ -254,15 +268,18 @@ public class MainWindow
 		TabItem tabOutput = new TabItem(tabs, SWT.NONE);
 		tabOutput.setText("Output");
 		
-		Composite cmpOutput = new Composite(tabs, SWT.NONE);
-		tabOutput.setControl(cmpOutput);
-		cmpOutput.setLayout(new FormLayout());
+		ScrolledComposite scmpOutput = new ScrolledComposite(tabs, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+		scmpOutput.setAlwaysShowScrollBars(true);
+		tabOutput.setControl(scmpOutput);
+		scmpOutput.setExpandHorizontal(true);
+		scmpOutput.setExpandVertical(true);
 		
-		RawDataOutputGroup xgrpRawData = new RawDataOutputGroup(cmpOutput, SWT.NONE);
-		FormData fd_xgrpRawData = new FormData();
-		fd_xgrpRawData.top = new FormAttachment(0, 10);
-		fd_xgrpRawData.left = new FormAttachment(0, 10);
-		xgrpRawData.setLayoutData(fd_xgrpRawData);
+		Composite cmpOutput = new Composite(scmpOutput, SWT.NONE);
+		cmpOutput.setLayout(new GridLayout(1, false));
+		
+		xgrpRawMonitoringOutput = new RawMonitoringOutputGroup(cmpOutput, SWT.NONE);
+		scmpOutput.setContent(cmpOutput);
+		scmpOutput.setMinSize(cmpOutput.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
 		TabItem tabSettings = new TabItem(tabs, SWT.NONE);
 		tabSettings.setText("Settings");

@@ -4,12 +4,13 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,12 +26,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableItem;
 import org.sqlite.SQLiteConfig;
 
+import ph.gov.bsp.ses.sdc.sdd.amts.data.Filter;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Log;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Monitoring;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Version;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.AssignmentDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.MainWindow;
+import ph.gov.bsp.ses.sdc.sdd.amts.ui.PaginationComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ProcessingComposite;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ProcessingDialog;
 import ph.gov.bsp.ses.sdc.sdd.amts.ui.ReceivingDialog;
@@ -39,11 +42,10 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
-import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 public class Program
 {
-	private static final String VERSION = "v0.1.17087.2";
+	private static final String VERSION = "v0.2.17088.0";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
@@ -193,7 +195,6 @@ public class Program
 						
 			final MainWindow mw = new MainWindow();
 			mw.setNoSettings(!(getSettingsFile().exists()));
-			mw.setWindowState(getSetting("ui.mainwindow.windowstate"));
 			
 			// load settings
 			mw.getTextSqliteDb().setText(getSetting("path.sqlitedb"));
@@ -204,7 +205,6 @@ public class Program
 			// load about page
 			mw.setInfoUrl(Utilities.getAbsolutePath("ABOUT.html"));
 			
-			mw.getDisplay();
 			Realm.runWithDefault(SWTObservables.getRealm(mw.getDisplay()), new Runnable()
 			{
 				@Override
@@ -619,13 +619,13 @@ public class Program
 			boolean dirMade = false;
 			File dirFileServer = new File(getSetting("path.fileserver"));
 			File targetBase = null;
-			long receivedOn = 0;
+			long enteredOn = 0;
 			String folder = null;
 			int tries = Integer.parseInt(getSetting("data.mkdirtries"));
 			for (int i = 1; i <= tries; i++)
 			{
-				receivedOn = System.currentTimeMillis();
-				folder = "" + receivedOn;
+				enteredOn = System.currentTimeMillis();
+				folder = "" + enteredOn;
 				targetBase = new File(dirFileServer, folder);
 				if (dirMade = targetBase.mkdirs()) break;
 			}
@@ -634,7 +634,7 @@ public class Program
 			{
 				throw new IOException(
 						String.format(
-								"Unable to create folder in %s after %d tries.", 
+								"Unable to create folder in %s after %s tries.", 
 								dirFileServer, 
 								getSetting("path.mkdirtries")));
 			}	
@@ -666,7 +666,7 @@ public class Program
 			{
 				Monitoring item = new Monitoring();
 				item.setFolder(folder);
-				item.setReceivedOn(new Date(receivedOn));
+				item.setEnteredOn(new Date(enteredOn));
 				item.setReceivedBy(Program.USER);
 				item.setStatus("NEW");
 				
@@ -917,6 +917,7 @@ public class Program
 			}
 			
 			int rowDiff = rowEnd - rowStart;
+			if (rowDiff < PaginationComposite.DEFAULT_ROW_DELTA) rowEnd = rowStart + PaginationComposite.DEFAULT_ROW_DELTA; 
 			
 			if (rowStart > rowTotal) 
 			{
@@ -1228,4 +1229,65 @@ public class Program
 			MsgBox.show(shell, "Unable to create local copy.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
 	}
+
+	public static String[] getMonitoringFilterItems(Shell shell, String string)
+	{
+		try
+		{
+			Connection conn = null;
+			
+			try
+			{
+				conn = getConnection();
+				return Monitoring.getFilterItems(conn, string);
+			}
+			finally
+			{
+				if (conn != null) conn.close();
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "Unable to get filter items.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+			return null;
+		}	
+	}
+
+	public static void createOutputMonitoringRaw(Shell shell, Filter filter)
+	{
+		try
+		{
+			FileDialog dialog = new FileDialog(shell, SWT.SAVE);
+			dialog.setFilterExtensions(Utilities.toArray("*.csv", "*.*"));
+			dialog.setFilterNames(Utilities.toArray("Comma-Separated Values", "All Files"));
+			String target = dialog.open();
+			if (Utilities.isNullOrBlank(target)) return;
+			
+			PrintWriter pw = new PrintWriter(target);
+			Connection conn = null;
+			boolean success = false;
+			
+			try
+			{
+				conn = getConnection();
+				success = Monitoring.createOutputMonitoringRaw(conn, filter, pw);
+			}
+			finally
+			{
+				if (conn != null) conn.close();
+				if (pw != null) 
+				{
+					pw.close();
+					if (!success) FileUtils.deleteQuietly(new File(target));
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+	}
+
 }

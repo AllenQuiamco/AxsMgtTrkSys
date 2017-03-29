@@ -1,6 +1,6 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.data;
 
-import java.sql.Date;
+import java.util.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -55,16 +55,57 @@ public class Common
 		return DATE_FORMATTER.format(value);
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static Long morphDate(Date value)
 	{
 		if (value == null) return null;
+		
+//		int year = value.getYear();
+//		if (year < 1900) year += 1900; 
+//		value.setYear(year);
+		
 		String formattedDate = formatDate(value);
 		formattedDate = formattedDate.replace("-", "").replace(" ", "").replace(":", "");
 		return Long.parseLong(formattedDate);
 	}
 
 	public static Long morphDate(int year, int month, int day)
-	{
+	{		
 		return (year * 10000000000L) + ((month + 1) * 100000000L) + (day * 1000000L);
+	}
+
+	public static String cleanColumnName(String column)
+	{
+		if (column == null) throw new IllegalArgumentException("Argument String cannot be null");
+		return column.replace("`", "")
+				.replace(";", "")
+				.replace("-", "")
+				.replace(" ", "");
+	}
+	
+	public static String cleanSqlValue(String string)
+	{
+		// TODO Implement this
+		return string;
+	}
+
+	public static String morphToCsvString(String string)
+	{
+		if (string == null) return "";
+		
+		string = string
+				.replace("\n", " ")
+				.replace("\r", "")
+				.replace("\"", "\"\"");
+		
+		return String.format("\"%s\"", string);
+	}
+
+	public static String morphToCsvDate(Date date)
+	{
+		if (date == null) return "";
+		
+		SimpleDateFormat formatter = new SimpleDateFormat("M/d/yyyy hh:mm:ss a");
+		return formatter.format(date);
 	}
 }

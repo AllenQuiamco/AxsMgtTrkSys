@@ -207,29 +207,29 @@ public class ProcessingComposite extends Composite
 		tblclmnType.setWidth(100);
 		tblclmnType.setText("Type");
 		
-		TableColumn tblclmnAssignedTo = new TableColumn(table, SWT.NONE);
-		tblclmnAssignedTo.setWidth(100);
-		tblclmnAssignedTo.setText("Assigned to");
+		TableColumn tblclmnAssignedOn = new TableColumn(table, SWT.NONE);
+		tblclmnAssignedOn.setWidth(100);
+		tblclmnAssignedOn.setText("Assigned on");
 		
 		TableColumn tblclmnAssignedBy = new TableColumn(table, SWT.NONE);
 		tblclmnAssignedBy.setWidth(100);
 		tblclmnAssignedBy.setText("Assigned by");
 		
-		TableColumn tblclmnAssignedOn = new TableColumn(table, SWT.NONE);
-		tblclmnAssignedOn.setWidth(100);
-		tblclmnAssignedOn.setText("Assigned on");
+		TableColumn tblclmnAssignedTo = new TableColumn(table, SWT.NONE);
+		tblclmnAssignedTo.setWidth(100);
+		tblclmnAssignedTo.setText("Assigned to");
 		
-		TableColumn tblclmnReceivedOn = new TableColumn(table, SWT.NONE);
-		tblclmnReceivedOn.setWidth(100);
-		tblclmnReceivedOn.setText("Received on");
+		TableColumn tblclmnProcessedOn = new TableColumn(table, SWT.NONE);
+		tblclmnProcessedOn.setWidth(100);
+		tblclmnProcessedOn.setText("Processed on");
+		
+		TableColumn tblclmnProcessedBy = new TableColumn(table, SWT.NONE);
+		tblclmnProcessedBy.setWidth(100);
+		tblclmnProcessedBy.setText("Processed by");
 		
 		TableColumn tblclmnRemarks = new TableColumn(table, SWT.NONE);
 		tblclmnRemarks.setWidth(100);
 		tblclmnRemarks.setText("Remarks");
-		
-		// TODO Get ui config
-		// TODO EnteredOn
-		// TODO Additional columns
 	}
 	
 	@Override
@@ -291,11 +291,12 @@ public class ProcessingComposite extends Composite
 				String.format("%d", row.getId()), 
 				row.getStatus(), 
 				row.getRequestType(), 
-				row.getAssignedTo(), 
-				row.getAssignedBy(),
 				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()),
-				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
-				row.getRemarks()));
+				row.getAssignedBy(),
+				row.getAssignedTo(), 
+				(row.getProcessedOn() == null) ? "" : formatter.format(row.getProcessedOn()),
+				row.getProcessedBy(),  
+				row.getRemarks().replace(String.format("%n"), " ")));
 	}
 	
 	public void displayEmpty()

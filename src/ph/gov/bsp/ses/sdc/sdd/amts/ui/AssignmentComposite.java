@@ -216,6 +216,10 @@ public class AssignmentComposite extends Composite
 		tblclmnReceivedOn.setWidth(100);
 		tblclmnReceivedOn.setText("Received on");
 		
+		TableColumn tblclmnEnteredOn = new TableColumn(table, SWT.NONE);
+		tblclmnEnteredOn.setWidth(100);
+		tblclmnEnteredOn.setText("Entered on");
+		
 		TableColumn tblclmnAssignedTo = new TableColumn(table, SWT.NONE);
 		tblclmnAssignedTo.setWidth(100);
 		tblclmnAssignedTo.setText("Assigned to");
@@ -227,6 +231,10 @@ public class AssignmentComposite extends Composite
 		TableColumn tblclmnAssignedBy = new TableColumn(table, SWT.NONE);
 		tblclmnAssignedBy.setWidth(100);
 		tblclmnAssignedBy.setText("Assigned by");
+		
+		TableColumn tblclmnResolvedOn = new TableColumn(table, SWT.NONE);
+		tblclmnResolvedOn.setWidth(100);
+		tblclmnResolvedOn.setText("Resolved on");
 		
 		TableColumn tblclmnRemarks = new TableColumn(table, SWT.NONE);
 		tblclmnRemarks.setWidth(100);
@@ -293,11 +301,13 @@ public class AssignmentComposite extends Composite
 				row.getStatus(), 
 				row.getRequestType(), 
 				row.getRequestedBy(), 
-				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
+				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()),
+				(row.getEnteredOn() == null) ? "" : formatter.format(row.getEnteredOn()),
 				row.getAssignedTo(), 
 				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()), 
-				row.getAssignedBy(), 
-				row.getRemarks()));
+				row.getAssignedBy(),
+				(row.getResolvedOn() == null) ? "" : formatter.format(row.getResolvedOn()),
+				row.getRemarks().replace(String.format("%n"), " ")));
 	}
 	
 	public void displayEmpty()

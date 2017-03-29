@@ -1,9 +1,9 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.data;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 public class Log

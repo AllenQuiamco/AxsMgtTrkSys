@@ -1,8 +1,15 @@
-v0.1.17087.3 - CURRENT
-> Re-worded UI text
-> Re-aligned UI elements
-> Added "Download" button to AssignmentDialog 
+v0.2.17088.0 - CURRENT
+> Changed UI elements
 > Implemented persistent window states
+> Added "EnteredOn" to Monitoring
+> Fixed filtering on multiple fields
+> Changed handling of refresh to always display at least
+PaginationComposite.DEFAULT_ROW_DELTA + 1 rows
+> Added setting "data.displaydelta"
+> PaginationComposite.DEFAULT_ROW_DELTA is set from setting "data.displaydelta"  
+on class load
+> Added handling changes to Remarks on item edit dialogs to warn user of 
+editing previous Remarks data
 
 v0.1.17087.2
 > Added handling to cancel actions in Receiving tab to delete any created folders 
