@@ -1,4 +1,7 @@
-v0.2.17088.0 - CURRENT
+v0.2.17089.1 - CURRENT
+> Fixed bug on Remarks handling on item edit dialogs
+
+v0.2.17088.0 -  66c5b9e
 > Changed UI elements
 > Implemented persistent window states
 > Added "EnteredOn" to Monitoring
@@ -19,6 +22,6 @@ ProcessingDialog to "Update"
 v0.1.17087.1
 ???
 
-v0.1.17087.0
+v0.1.17087.0 - 83f13cd
 > Initial version
 > Built for beta test on 28 Mar 2017

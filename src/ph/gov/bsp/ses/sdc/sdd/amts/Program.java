@@ -45,7 +45,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
 
 public class Program
 {
-	private static final String VERSION = "v0.2.17088.0";
+	private static final String VERSION = "v0.2.17089.1";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));

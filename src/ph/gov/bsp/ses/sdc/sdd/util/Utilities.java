@@ -125,6 +125,16 @@ public final class Utilities
 		if (string == null) return true;
 		return (string.trim().isEmpty());
 	}
+	
+	/**
+	 * Returns <code>true</code> if the argument {@link String} is null or 
+	 * empty; otherwise, <code>false</code>.
+	 */
+	public static boolean isNullOrEmpty(String string)
+	{
+		if (string == null) return true;
+		return (string.isEmpty());
+	}
 
 	public static void threadSleep(long i)
 	{

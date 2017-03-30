@@ -4,7 +4,7 @@ Access Management Tracking System
 Tool for logging actions done regarding management of 
 access rights requests handled by SDC-SDD, Bangko Sentral ng Pilipinas.
 
-DISCLAIMER: This tool is not intended to process or give access to data  
+DISCLAIMER: This tool is not intended to process or enable access to data  
 considered "sensitive" by the aforementioned organization.   
 
 Source code is included with this software. The latest source code may be 
@@ -108,4 +108,10 @@ The original binaries and source may be downloaded from
 A copy of the binaries in "sqlite-jdbc-3.16.1.jar" is packaged within the 
 software.
 
+===============================================================================
 
+Images from VS2010 Image Library
+
+This software uses images from the Microsoft Visual Studio 2010 Image Library, 
+available at [https://msdn.microsoft.com/en-us/library/ms247035(v=vs.100).ASPX]
+Copies of the images used are packaged within the software.

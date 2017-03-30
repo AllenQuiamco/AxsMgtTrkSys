@@ -131,15 +131,20 @@ public class ProcessingDialog extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				if (!itemEditable.getRemarks().startsWith(item.getRemarks()))
+				String oldRemarks = item.getRemarks();
+				String newRemarks = itemEditable.getRemarks();
+				if (!Utilities.isNullOrBlank(oldRemarks))
 				{
-					MsgBoxResult r = MsgBox.show(shell,
-							String.format("You have edited a previous remark.%n%nAre you sure you want proceed with the changes?"),
-							"Confirm",
-							MsgBoxButtons.YES_NO,
-							MsgBoxIcon.WARNING);
-					
-					if (!r.isYes()) return;
+					if (Utilities.isNullOrBlank(newRemarks) || !newRemarks.startsWith(oldRemarks))
+					{
+						MsgBoxResult r = MsgBox.show(shell,
+								String.format("You have edited a previous remark.%n%nAre you sure you want proceed with the changes?"),
+								"Confirm",
+								MsgBoxButtons.YES_NO,
+								MsgBoxIcon.WARNING);
+						
+						if (!r.isYes()) return;
+					}
 				}
 				
 				result = true;
