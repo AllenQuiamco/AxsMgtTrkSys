@@ -3,6 +3,7 @@ package ph.gov.bsp.ses.sdc.sdd.amts;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -42,10 +43,11 @@ import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
 import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 public class Program
 {
-	private static final String VERSION = "v0.2.17089.1";
+	private static final String VERSION = "v0.2.17090.2";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
@@ -192,9 +194,11 @@ public class Program
 //			System.out.println(Monitoring.morphDate(date));
 //			testLoadSamples();
 //			System.exit(ExitCode.HARD_ABORT);
-						
+			
+			boolean noSettings = !(getSettingsFile().exists()); 
+			
 			final MainWindow mw = new MainWindow();
-			mw.setNoSettings(!(getSettingsFile().exists()));
+			mw.setNoSettings(noSettings);
 			
 			// load settings
 			mw.getTextSqliteDb().setText(getSetting("path.sqlitedb"));
@@ -1260,18 +1264,86 @@ public class Program
 		{
 			FileDialog dialog = new FileDialog(shell, SWT.SAVE);
 			dialog.setFilterExtensions(Utilities.toArray("*.csv", "*.*"));
-			dialog.setFilterNames(Utilities.toArray("Comma-Separated Values", "All Files"));
+			dialog.setFilterNames(Utilities.toArray("Comma-delimited CSV File (*.csv)", "All Files (*.*)"));
 			String target = dialog.open();
 			if (Utilities.isNullOrBlank(target)) return;
 			
-			PrintWriter pw = new PrintWriter(target);
+			File fTarget = new File(target);
+			boolean append = false;
+			if (fTarget.exists())
+			{
+				MsgBoxResult r = MsgBox.show(shell, 
+						String.format("Do you want to append to the selected file?%n"
+								+ "%n"
+								+ "[Yes] - Append to the file%n"
+								+ "[No] - Delete previous contents"), 
+								"Append?",
+								MsgBoxButtons.YES_NO,
+								MsgBoxIcon.QUESTION);
+				append = r.isYes();
+			}
+			
+			FileWriter fw = new FileWriter(fTarget, append); 
+			PrintWriter pw = new PrintWriter(fw);
 			Connection conn = null;
 			boolean success = false;
 			
 			try
 			{
 				conn = getConnection();
-				success = Monitoring.createOutputMonitoringRaw(conn, filter, pw);
+				success = Monitoring.createOutputRaw(conn, filter, pw, append);
+			}
+			finally
+			{
+				if (conn != null) conn.close();
+				if (pw != null) 
+				{
+					pw.close();
+					if (!success) FileUtils.deleteQuietly(new File(target));
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			MsgBox.show(shell, "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+		}
+	}
+
+	public static void createOutputLogRaw(Shell shell, Filter filter)
+	{
+		try
+		{
+			FileDialog dialog = new FileDialog(shell, SWT.SAVE);
+			dialog.setFilterExtensions(Utilities.toArray("*.csv", "*.*"));
+			dialog.setFilterNames(Utilities.toArray("Comma-delimited CSV File (*.csv)", "All Files (*.*)"));
+			String target = dialog.open();
+			if (Utilities.isNullOrBlank(target)) return;
+			
+			File fTarget = new File(target);
+			boolean append = false;
+			if (fTarget.exists())
+			{
+				MsgBoxResult r = MsgBox.show(shell, 
+						String.format("Do you want to append to the selected file?%n"
+								+ "%n"
+								+ "[Yes] - Append to the file%n"
+								+ "[No] - Delete previous contents"), 
+								"Append?",
+								MsgBoxButtons.YES_NO,
+								MsgBoxIcon.QUESTION);
+				append = r.isYes();
+			}
+			
+			FileWriter fw = new FileWriter(fTarget, append); 
+			PrintWriter pw = new PrintWriter(fw);
+			Connection conn = null;
+			boolean success = false;
+			
+			try
+			{
+				conn = getConnection();
+				success = Log.createOutputRaw(conn, filter, pw, append);
 			}
 			finally
 			{

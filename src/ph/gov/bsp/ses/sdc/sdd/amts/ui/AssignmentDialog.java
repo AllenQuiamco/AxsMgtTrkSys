@@ -423,8 +423,6 @@ public class AssignmentDialog extends Dialog
 		lblRemarks.setText("Remarks");
 		
 		initDataBindings();
-		
-		// TODO EnteredOn
 	}
 	
 	protected DataBindingContext initDataBindings()

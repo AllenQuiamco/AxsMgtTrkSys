@@ -128,16 +128,22 @@ public class Settings
 		data = new HashMap<String, String>();
 		
 		defaults = new HashMap<String, String>();
+		
 		defaults.put("path.sqlitedb", "amts.sqlite3");
 		defaults.put("path.fileserver", ".\\");
 		defaults.put("path.localcopy", ".\\");
+		
 		defaults.put("data.busytimeoutmsecs", "30000");
 		defaults.put("data.mkdirtries", "100");
 		defaults.put("data.displaydelta", "19");
+		
 		defaults.put("ui.mainwindow.windowstate", "RESTORED");
 		defaults.put("ui.receivingdialog.windowstate", "RESTORED");
 		defaults.put("ui.assignmentdialog.windowstate", "RESTORED");
 		defaults.put("ui.processingdialog.windowstate", "RESTORED");
+		defaults.put("ui.rawmonitoringoutputdialog.windowstate", "RESTORED");
+		defaults.put("ui.rawlogoutputdialog.windowstate", "RESTORED");
+		
 		defaults.put("filter.receivingcomposite.requesttype", "");
 		defaults.put("filter.receivingcomposite.requestedby", "");
 		defaults.put("filter.assignmentcomposite.status", "NEW");

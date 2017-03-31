@@ -1,6 +1,5 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.eclipse.swt.widgets.Composite;

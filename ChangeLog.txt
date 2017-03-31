@@ -1,7 +1,14 @@
-v0.2.17089.1 - CURRENT
+v0.2.17090.2 - CURRENT
+> Implemented UI for raw data CSV output for Log table
+> Separated UI for raw data CSV outputs to their own windows
+> Implemented persistent filters for ReceivingComposite, AssignmentComposite 
+and ProcessingComposite
+> Implemented alert for user when no settings.ini is found
+
+v0.2.17089.1 - b87c8a7
 > Fixed bug on Remarks handling on item edit dialogs
 
-v0.2.17088.0 -  66c5b9e
+v0.2.17088.0 - 66c5b9e
 > Changed UI elements
 > Implemented persistent window states
 > Added "EnteredOn" to Monitoring

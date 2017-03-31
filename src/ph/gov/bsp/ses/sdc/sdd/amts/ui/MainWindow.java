@@ -29,11 +29,15 @@ import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.RowLayout;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.util.Utilities;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
+
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.widgets.Group;
 
 /**
  * The main window of the application.
@@ -43,12 +47,23 @@ import org.eclipse.swt.custom.ScrolledComposite;
  */
 public class MainWindow
 {
+	private static final String TAG_WINDOW_STATE = "ui.mainwindow.windowstate";
+	private static final String TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTTYPE = "filter.receivingcomposite.requesttype";
+	private static final String TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTEDBY = "filter.receivingcomposite.requestedby";
+	private static final String TAG_FILTER_ASSIGNMENTCOMPOSITE_STATUS = "filter.assignmentcomposite.status";
+	private static final String TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTTYPE = "filter.assignmentcomposite.requesttype";
+	private static final String TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTEDBY = "filter.assignmentcomposite.requestedby";
+	private static final String TAG_FILTER_PROCESSINGCOMPOSITE_STATUS = "filter.processingcomposite.status";
+	private static final String TAG_FILTER_PROCESSINGCOMPOSITE_REQUESTTYPE = "filter.processingcomposite.requesttype";
+	private static final String TAG_FILTER_PROCESSINGCOMPOSITE_ASSIGNEDTO = "filter.processingcomposite.assignedto";
+	
 	/**
 	 * An instance's reference to itself. Useful with anonymous inner types.
 	 */
 	private MainWindow self;
 	private String title;
 	private boolean noSettings;
+	private boolean noSettingsPromptShown;
 	
 	private Shell shell;
 	private Display display;
@@ -62,8 +77,6 @@ public class MainWindow
 	private ReceivingComposite xcmpReceiving;
 	private AssignmentComposite xcmpAssignment;
 	private ProcessingComposite xcmpProcessing;
-	
-	private RawMonitoringOutputGroup xgrpRawMonitoringOutput;
 	
 	/**
 	 * @wbp.parser.constructor
@@ -79,7 +92,15 @@ public class MainWindow
 		createContents();
 		self = this;
 		title = shell.getText();
-		setWindowState(Program.getSetting("ui.mainwindow.windowstate"));
+		setWindowState(Program.getSetting(TAG_WINDOW_STATE)); // XXX Direct reference to Program.getSetting(String)
+		xcmpReceiving.setFilterType(Program.getSetting(TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTTYPE)); 
+		xcmpReceiving.setFilterFrom(Program.getSetting(TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTEDBY));
+		xcmpAssignment.setFilterStatus(Program.getSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_STATUS));
+		xcmpAssignment.setFilterType(Program.getSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTTYPE));
+		xcmpAssignment.setFilterFrom(Program.getSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTEDBY));
+		xcmpProcessing.setFilterStatus(Program.getSetting(TAG_FILTER_PROCESSINGCOMPOSITE_STATUS));
+		xcmpProcessing.setFilterType(Program.getSetting(TAG_FILTER_PROCESSINGCOMPOSITE_REQUESTTYPE));
+		xcmpProcessing.setFilterAssignedTo(Program.getSetting(TAG_FILTER_PROCESSINGCOMPOSITE_ASSIGNEDTO));
 	}
 	
 	/**
@@ -119,7 +140,15 @@ public class MainWindow
 			public void shellClosed(ShellEvent e)
 			{
 				String windowState = getWindowState();
-				Program.setSetting("ui.mainwindow.windowstate", windowState);
+				Program.setSetting(TAG_WINDOW_STATE, windowState); // XXX Direct reference to Program.setSetting(String, String)
+				Program.setSetting(TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTTYPE, xcmpReceiving.getFilterType()); 
+				Program.setSetting(TAG_FILTER_RECEIVINGCOMPOSITE_REQUESTEDBY, xcmpReceiving.getFilterFrom());
+				Program.setSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_STATUS, xcmpAssignment.getFilterStatus());
+				Program.setSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTTYPE, xcmpAssignment.getFilterType());
+				Program.setSetting(TAG_FILTER_ASSIGNMENTCOMPOSITE_REQUESTEDBY, xcmpAssignment.getFilterFrom());
+				Program.setSetting(TAG_FILTER_PROCESSINGCOMPOSITE_STATUS, xcmpProcessing.getFilterStatus());
+				Program.setSetting(TAG_FILTER_PROCESSINGCOMPOSITE_REQUESTTYPE, xcmpProcessing.getFilterType());
+				Program.setSetting(TAG_FILTER_PROCESSINGCOMPOSITE_ASSIGNEDTO, xcmpProcessing.getFilterAssignedTo());
 			}
 			
 			@Override
@@ -127,7 +156,16 @@ public class MainWindow
 			{
 				if (noSettings)
 				{
-					System.out.println("NOSETTINGS"); // TODO Implement this
+					if (!noSettingsPromptShown)
+					{
+						MsgBox.show(shell, 
+								String.format("Default settings have been loaded, and may not be set to the proper values.%n"
+										+ "%n"
+										+ "Edit the these in the \"Settings\" tab. See the \"Info\" tab for more information."), 
+								"First run", 
+								MsgBoxButtons.OK, MsgBoxIcon.WARNING);
+						noSettingsPromptShown = true;
+					}
 				}
 			}
 		});
@@ -250,8 +288,6 @@ public class MainWindow
 		
 		xcmpReceiving = new ReceivingComposite(tabs, SWT.NONE);
 		tabReceiving.setControl(xcmpReceiving);
-		RowLayout rl_cmpReceiving = new RowLayout(SWT.VERTICAL);
-		rl_cmpReceiving.wrap = false;
 		
 		TabItem tabAssignment = new TabItem(tabs, SWT.NONE);
 		tabAssignment.setText("Assignment");
@@ -275,9 +311,37 @@ public class MainWindow
 		scmpOutput.setExpandVertical(true);
 		
 		Composite cmpOutput = new Composite(scmpOutput, SWT.NONE);
-		cmpOutput.setLayout(new GridLayout(1, false));
+		cmpOutput.setLayout(null);
 		
-		xgrpRawMonitoringOutput = new RawMonitoringOutputGroup(cmpOutput, SWT.NONE);
+		Group grpRawOutputcsv = new Group(cmpOutput, SWT.NONE);
+		grpRawOutputcsv.setText("Raw Output (CSV)");
+		grpRawOutputcsv.setBounds(10, 10, 176, 58);
+		
+		Button btnRawOutputMonitoring = new Button(grpRawOutputcsv, SWT.NONE);
+		btnRawOutputMonitoring.addSelectionListener(new SelectionAdapter() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				new RawMonitoringOutputDialog(getShell(), SWT.NONE).open();
+			}
+		});
+		btnRawOutputMonitoring.setBounds(10, 20, 75, 25);
+		btnRawOutputMonitoring.setText("Monitoring");
+		
+		Button btnRawOutputLog = new Button(grpRawOutputcsv, SWT.NONE);
+		btnRawOutputLog.addSelectionListener(new SelectionAdapter() 
+		{
+			@Override
+			public void widgetSelected(SelectionEvent e) 
+			{
+				new RawLogOutputDialog(getShell(), SWT.NONE).open();
+			}
+		});
+		btnRawOutputLog.setBounds(91, 20, 75, 25);
+		btnRawOutputLog.setText("Log");
+		scmpOutput.setContent(cmpOutput);
+		scmpOutput.setMinSize(cmpOutput.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		scmpOutput.setContent(cmpOutput);
 		scmpOutput.setMinSize(cmpOutput.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
@@ -494,7 +558,7 @@ public class MainWindow
 		this.noSettings = noSettings;
 	}
 
-	public void setWindowState(String string)
+	protected void setWindowState(String string)
 	{
 		if (Utilities.isNullOrBlank(string)) return;
 		
@@ -547,7 +611,7 @@ public class MainWindow
 		}
 	}
 	
-	public String getWindowState()
+	protected String getWindowState()
 	{
 		boolean max = shell.getMaximized();
 		boolean min = shell.getMinimized();

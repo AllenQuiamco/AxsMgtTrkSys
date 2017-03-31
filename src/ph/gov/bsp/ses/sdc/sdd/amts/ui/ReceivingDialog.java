@@ -369,9 +369,6 @@ public class ReceivingDialog extends Dialog
 		lblRemarks.setText("Remarks");
 		
 		initDataBindings();
-		
-		// TODO Detect remarks startsWith
-		
 	}
 	
 	protected DataBindingContext initDataBindings()

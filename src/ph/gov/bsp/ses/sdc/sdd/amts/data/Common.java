@@ -55,14 +55,9 @@ public class Common
 		return DATE_FORMATTER.format(value);
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static Long morphDate(Date value)
 	{
 		if (value == null) return null;
-		
-//		int year = value.getYear();
-//		if (year < 1900) year += 1900; 
-//		value.setYear(year);
 		
 		String formattedDate = formatDate(value);
 		formattedDate = formattedDate.replace("-", "").replace(" ", "").replace(":", "");
@@ -89,6 +84,12 @@ public class Common
 		return string;
 	}
 
+	public static String morphToCsvString(Object string)
+	{
+		if (string == null) return null;
+		return string.toString();
+	}
+	
 	public static String morphToCsvString(String string)
 	{
 		if (string == null) return "";

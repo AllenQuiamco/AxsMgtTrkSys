@@ -374,8 +374,6 @@ public class ProcessingDialog extends Dialog
 		lblRemarks.setText("Remarks");
 		
 		initDataBindings();
-		
-		// TODO EnteredOn
 	}
 	
 	protected DataBindingContext initDataBindings() 

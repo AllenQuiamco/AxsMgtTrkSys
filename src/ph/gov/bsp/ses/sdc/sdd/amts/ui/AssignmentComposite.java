@@ -352,13 +352,29 @@ public class AssignmentComposite extends Composite
 		else return text;
 	}
 	
+	public void setFilterStatus(String filter)
+	{
+		if ("".equals(filter)) filter = "ALL";
+		this.cbxStatus.setText(filter);
+	}
+	
 	public String getFilterType()
 	{
 		return this.txtType.getText();
 	}
 	
+	public void setFilterType(String filter)
+	{
+		this.txtType.setText(filter);
+	}
+	
 	public String getFilterFrom()
 	{
 		return this.txtFrom.getText();
+	}
+	
+	public void setFilterFrom(String filter)
+	{
+		this.txtFrom.setText(filter);
 	}
 }

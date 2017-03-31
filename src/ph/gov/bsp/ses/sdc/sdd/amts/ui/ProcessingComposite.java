@@ -341,13 +341,29 @@ public class ProcessingComposite extends Composite
 		else return text;
 	}
 	
+	public void setFilterStatus(String filter)
+	{
+		if ("".equals(filter)) filter = "ALL";
+		this.cbxStatus.setText(filter);
+	}
+	
 	public String getFilterType()
 	{
 		return this.txtType.getText();
+	}
+	
+	public void setFilterType(String filter)
+	{
+		this.txtType.setText(filter);
 	}
 
 	public String getFilterAssignedTo()
 	{
 		return this.txtAssignedTo.getText();
+	}
+	
+	public void setFilterAssignedTo(String filter)
+	{
+		this.txtAssignedTo.setText(filter);
 	}
 }

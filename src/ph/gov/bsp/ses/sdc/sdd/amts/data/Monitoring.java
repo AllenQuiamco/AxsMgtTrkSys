@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -527,18 +526,21 @@ public class Monitoring implements Cloneable
 		return items.toArray(retobj);
 	}
 
-	public static boolean createOutputMonitoringRaw(Connection conn, Filter filter, PrintWriter pw) throws SQLException
+	public static boolean createOutputRaw(Connection conn, Filter filter, PrintWriter pw, boolean append) throws SQLException
 	{
 		boolean success = false;
 		String header = TABLE_COLS.replace("`", "\"");
 		String where = "";
-		String filterBuild = filter.build();
-		if (!Utilities.isNullOrBlank(filterBuild)) where = "WHERE " + filterBuild;
+		if (filter != null) 
+		{
+			String filterBuild = filter.build();
+			if (!Utilities.isNullOrBlank(filterBuild)) where = "WHERE " + filterBuild;
+		}
 		
 		List<Monitoring> items = getRows(conn, where, "", "");
 		if (items.size() > 0)
 		{
-			pw.println(header);
+			if (!append) pw.println(header);
 			
 			for (Monitoring item : items)
 			{

@@ -12,7 +12,6 @@ public class Filter
 {
 	List<String> parts = new LinkedList<String>();
 	
-	@SuppressWarnings("deprecation")
 	public void add(String column, Date from, Date to)
 	{
 		column = Common.cleanColumnName(column);
