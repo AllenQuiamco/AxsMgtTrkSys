@@ -276,7 +276,7 @@ public class ReceivingComposite extends Composite
 				row.getRequestedBy(), 
 				(row.getReceivedOn() == null) ? "" : formatter.format(row.getReceivedOn()), 
 				row.getReceivedBy(), 
-				row.getRemarks().replace(String.format("%n"), " ")));
+				row.getRemarks()));
 	}
 	
 	public void displayEmpty()

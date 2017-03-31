@@ -47,7 +47,7 @@ import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxResult;
 
 public class Program
 {
-	private static final String VERSION = "v0.2.17090.2";
+	private static final String VERSION = "v0.3.x.x";
 	private static final String APP_NAME = "amts";
 	private static final String SETTINGS_FILE_NAME = "settings.ini";
 	public static final String USER = String.format("%s\\%s", System.getenv("USERDOMAIN"), System.getenv("USERNAME"));
@@ -1258,7 +1258,7 @@ public class Program
 		}	
 	}
 
-	public static void createOutputMonitoringRaw(Shell shell, Filter filter)
+	public static boolean createOutputMonitoringRaw(Shell shell, Filter filter)
 	{
 		try
 		{
@@ -1266,7 +1266,7 @@ public class Program
 			dialog.setFilterExtensions(Utilities.toArray("*.csv", "*.*"));
 			dialog.setFilterNames(Utilities.toArray("Comma-delimited CSV File (*.csv)", "All Files (*.*)"));
 			String target = dialog.open();
-			if (Utilities.isNullOrBlank(target)) return;
+			if (Utilities.isNullOrBlank(target)) return false;
 			
 			File fTarget = new File(target);
 			boolean append = false;
@@ -1292,6 +1292,7 @@ public class Program
 			{
 				conn = getConnection();
 				success = Monitoring.createOutputRaw(conn, filter, pw, append);
+				return true;
 			}
 			finally
 			{
@@ -1308,9 +1309,10 @@ public class Program
 			e.printStackTrace();
 			MsgBox.show(shell, "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
+		return false;
 	}
 
-	public static void createOutputLogRaw(Shell shell, Filter filter)
+	public static boolean createOutputLogRaw(Shell shell, Filter filter)
 	{
 		try
 		{
@@ -1318,7 +1320,7 @@ public class Program
 			dialog.setFilterExtensions(Utilities.toArray("*.csv", "*.*"));
 			dialog.setFilterNames(Utilities.toArray("Comma-delimited CSV File (*.csv)", "All Files (*.*)"));
 			String target = dialog.open();
-			if (Utilities.isNullOrBlank(target)) return;
+			if (Utilities.isNullOrBlank(target)) return false;
 			
 			File fTarget = new File(target);
 			boolean append = false;
@@ -1344,6 +1346,7 @@ public class Program
 			{
 				conn = getConnection();
 				success = Log.createOutputRaw(conn, filter, pw, append);
+				return true;
 			}
 			finally
 			{
@@ -1360,6 +1363,7 @@ public class Program
 			e.printStackTrace();
 			MsgBox.show(shell, "An unexpected error occurred.", "Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 		}
+		return false;
 	}
 
 }

@@ -1,4 +1,9 @@
-v0.2.17090.2 - CURRENT
+v0.3.x.x - CURRENT
+> Implemented alert once output is finished 
+> Fixed crashing on unedited empty remarks
+> Fixed crashing on new entry and Received On is not edited
+
+v0.2.17090.2 - cc95fdb
 > Implemented UI for raw data CSV output for Log table
 > Separated UI for raw data CSV outputs to their own windows
 > Implemented persistent filters for ReceivingComposite, AssignmentComposite 

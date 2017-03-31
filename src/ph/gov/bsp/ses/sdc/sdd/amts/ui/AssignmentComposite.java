@@ -307,7 +307,7 @@ public class AssignmentComposite extends Composite
 				(row.getAssignedOn() == null) ? "" : formatter.format(row.getAssignedOn()), 
 				row.getAssignedBy(),
 				(row.getResolvedOn() == null) ? "" : formatter.format(row.getResolvedOn()),
-				row.getRemarks().replace(String.format("%n"), " ")));
+				row.getRemarks()));
 	}
 	
 	public void displayEmpty()

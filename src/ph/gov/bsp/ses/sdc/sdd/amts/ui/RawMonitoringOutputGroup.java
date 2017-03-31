@@ -14,6 +14,9 @@ import org.eclipse.swt.events.SelectionEvent;
 
 import ph.gov.bsp.ses.sdc.sdd.amts.Program;
 import ph.gov.bsp.ses.sdc.sdd.amts.data.Filter;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBox;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxButtons;
+import ph.gov.bsp.ses.sdc.sdd.util.swt.MsgBoxIcon;
 
 import org.eclipse.wb.swt.SWTResourceManager;
 
@@ -225,10 +228,17 @@ public class RawMonitoringOutputGroup extends Group
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
-				create();
+				String text = btnCreate.getText();
+				btnCreate.setEnabled(false);
+				btnCreate.setText("Creating ...");
+				if (create()) MsgBox.show(getShell(), "File successfully created.", "Alert", MsgBoxButtons.OK, MsgBoxIcon.INFORMATION);
+				btnCreate.setText(text);
+				btnCreate.setEnabled(true);
 			}
 		});
-		btnCreate.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
+		GridData gd_btnCreate = new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1);
+		gd_btnCreate.widthHint = 80;
+		btnCreate.setLayoutData(gd_btnCreate);
 		btnCreate.setText("Create");
 		
 	}
@@ -239,7 +249,7 @@ public class RawMonitoringOutputGroup extends Group
 		// Disable the check that prevents subclassing of SWT components
 	}
 	
-	private void create()
+	private boolean create()
 	{
 		Date enteredOnFrom = xcdfEnteredOn.getFilter().getFrom();
 		Date enteredOnTo = xcdfEnteredOn.getFilter().getTo();
@@ -284,6 +294,6 @@ public class RawMonitoringOutputGroup extends Group
 		filter.add("ProcessedOn", processedOnFrom, processedOnTo);
 		filter.add("ResolvedOn", resolvedOnFrom, resolvedOnTo);
 		
-		Program.createOutputMonitoringRaw(getShell(), filter);
+		return Program.createOutputMonitoringRaw(getShell(), filter);
 	}
 }

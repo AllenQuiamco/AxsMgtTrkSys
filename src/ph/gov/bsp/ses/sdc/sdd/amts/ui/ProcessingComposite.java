@@ -296,7 +296,7 @@ public class ProcessingComposite extends Composite
 				row.getAssignedTo(), 
 				(row.getProcessedOn() == null) ? "" : formatter.format(row.getProcessedOn()),
 				row.getProcessedBy(),  
-				row.getRemarks().replace(String.format("%n"), " ")));
+				row.getRemarks()));
 	}
 	
 	public void displayEmpty()

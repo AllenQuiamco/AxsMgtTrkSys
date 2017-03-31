@@ -1,5 +1,6 @@
 package ph.gov.bsp.ses.sdc.sdd.amts.ui;
 
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class ReceivingDialog extends Dialog
 		Shell shell = new Shell(display);
 		final ReceivingDialog dialog = new ReceivingDialog(shell, SWT.NONE);
 		
-		Monitoring item = Monitoring.getSamples(1).getFirst();
+		Monitoring item = new Monitoring(); // Monitoring.getSamples(1).getFirst();
 		dialog.setItem(item);
 		
 		Realm.runWithDefault(SWTObservables.getRealm(display), new Runnable()
@@ -151,6 +152,27 @@ public class ReceivingDialog extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e) 
 			{
+				Date receivedOn = itemEditable.getReceivedOn();
+				if (receivedOn == null)
+				{
+					MsgBox.show(shell,
+							String.format("Edit the Received On field."), 
+							"Invalid entry",
+							MsgBoxButtons.OK, MsgBoxIcon.WARNING);
+					return;
+				} 
+				else 
+				{
+					if (receivedOn.compareTo(new Date(System.currentTimeMillis())) > 0)
+					{
+						MsgBox.show(shell,
+								String.format("You may not set a date/time for Received On that is greater than the current date/time."), 
+								"Invalid entry",
+								MsgBoxButtons.OK, MsgBoxIcon.WARNING);
+						return;
+					}
+				}
+				
 				String oldRemarks = item.getRemarks();
 				String newRemarks = itemEditable.getRemarks();
 				if (!Utilities.isNullOrBlank(oldRemarks))

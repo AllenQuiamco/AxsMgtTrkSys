@@ -1,8 +1,8 @@
 Access Management Tracking System
 © 2017 Miguel Aguinaldo
 
-Tool for logging actions done regarding management of 
-access rights requests handled by SDC-SDD, Bangko Sentral ng Pilipinas.
+Tool for logging actions done on access rights requests handled by SDC-SDD, 
+Bangko Sentral ng Pilipinas.
 
 DISCLAIMER: This tool is not intended to process or enable access to data  
 considered "sensitive" by the aforementioned organization.   
